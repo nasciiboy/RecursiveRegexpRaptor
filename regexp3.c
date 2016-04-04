@@ -8,7 +8,7 @@
 #define TRUE      1
 #define FALSE     0
 #define INF    1024
-#define CATCHS  100
+#define CATCHS   24
 
 struct CATch {
   char *ptr[CATCHS];
@@ -62,12 +62,6 @@ int regexp3( char *line, char *exp ){
   int result    = FALSE;
   int loops     = strlen( line );
 
-  Catch.index   = 0;
-
-  pathLine.pos  = 0;
-  pathLine.line = line;
-  pathLine.len  = loops;
-
   path.ptr      = exp;
   path.len      = strlen( exp );
   path.type     = PATH;
@@ -90,8 +84,7 @@ int regexp3( char *line, char *exp ){
     pathLine.len  = strlen( line ) - i;
     result = walker( path, &pathLine );
 
-    if( atTheEnd && result )
-      if( pathLine.pos != pathLine.len && result )
+    if( atTheEnd && result && pathLine.pos != pathLine.len )
         result = 0;
   }
 
@@ -158,7 +151,7 @@ int trekking( struct Path *path, struct PathLine *pathLine ){
       }
     }
 
-    if( loop > track.range.b || loop < track.range.a ){
+    if( loop < track.range.a || loop > track.range.b ){
       pathLine->pos -= npos;
       delCatch( &track, iCatch );
       return FALSE;
