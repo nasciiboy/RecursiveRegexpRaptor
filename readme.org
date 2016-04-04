@@ -135,6 +135,14 @@
       regexp3( "Handel", "H[eioau]ndel" );
     #+END_SRC
 
+    =[$|)}^= solo estos meta caracteres pueden buscarse dentro de una
+    clase de caracteres sin agregar escape, considere la posicion de
+    '^' para evitar la inversion.
+
+    #+BEGIN_SRC c
+      regexp3( "$|)}^", "([$|)}^])+" );
+    #+END_SRC
+
   - Rango(s) dentro de Clases de caracteres "[x-n]"
 
     #+BEGIN_SRC c
@@ -352,8 +360,172 @@
 
 * Hacking
 
+  Cual es el algoritmo para resolver una estructura regular?
+
+  1. Dividir la expresion en sus rutas principales.
+
+     Las rutas se marcan mediante el signo '|' que indica multiples
+     opciones a seguir.
+
+     #+BEGIN_EXAMPLE
+       ruta uno | ruta dos | ruta n
+     #+END_EXAMPLE
+
+     La posicion de cada expresion es indicativa del orden en que debe
+     resolverse. Una ruta principal se encuentra en el nivel de
+     anidamiento *cero* es decir no esta agrupada dentro de otra
+     exprecion.
+
+     #+BEGIN_EXAMPLE
+       (ruta uno) | ( (ruta dos a | rutad dos b) ) | ruta n
+       = 0 ================================================
+       = 1 ======   = 1 ==========================
+                      = 2 ======================
+     #+END_EXAMPLE
+
+     un nuevo nivel de anidamiento surge utilizando '(' y finaliza con
+     ')'. Cada '(' aumenta el anidamiento en 1 y cada ')' lo
+     disminulle en 1, si encontramas '|' al tener anidamiento 0, hemos
+     encontrado una ruta principal.
+
+     =walker= es la funcion que recursivamente optiene las rutas
+     pricipales, pasa cada posible ruta en orden a si misma y la
+     almacena en la variable local =track=, cada nueva y ultima ruta
+     principal no es divible y es enviada a =trekking= (senderista)
+     que debe dividirla en expreciones mas sencillas.
+
+     #+BEGIN_EXAMPLE
+       walker 1 # (ruta uno) | ( (ruta dos a | rutad dos b) ) | ruta n
+       walker 2 # (ruta uno)
+       walker 3 #              ( (ruta dos a | rutad dos b) )
+       walker 1 #                                               ruta n
+     #+END_EXAMPLE
+
+  2. Una ruta principal debe descomponerse en senderos o trayectos mas
+     sencillos eliminando niveles de anidamiento y obteniendo nuevas
+     rutas hasta dejar cadenas que puedan compararse caracter a
+     caracter.
+
+     La funcion =trekking= envia lo que internamente considera una
+     ruta a la funcion =tracker=, la cual corta y marca trayectos
+     segun el contexto.
+
+     #+BEGIN_EXAMPLE
+       trekking 1 # (ruta uno)
+       tracker       ruta uno
+     #+END_EXAMPLE
+
+     en este punto cada nuevo track es evaluado en busca de signos que
+     indiquen la necesidad de seguir reduciendo la exprecion
+     (=isPath=) en rutas, metacaracteres, clases de caracteres,
+     rangos, y repeticiones. De ser esto necesario se enviara el
+     trayecto a =walker= para crear un nuevo ciclo de analicis. De lo
+     contrario el =track= es comparable directamente y se optiene un
+     resultado que es enviado a =walker= quien responde a =regexp3=.
+
+     Cuando se requiere una nueva reduccion la respuesta se optiene
+     por =walker= quien inicia todo el proceso anterior hasta que
+     algun =trekking= responde positiva o negativamente.
+
+  3. optener el numero de ciclos de repeticion para cada
+     ruta/trayecto/expresion
+
+     una vez que =tracker= a reducido una ruta a trayecto, envia dicho
+     trayecto a =setLoops= quien dependiento lo que encuentre a
+     continuacion establece el numero de repeticiones en la variable
+     =LoopRange= (miembro de =Path=).
+
+     #+BEGIN_EXAMPLE
+       trekking  a-z    texto     (ruta uno)  *c       ?[abc]     {2,3}
+       tracker   a-z    | texto   | ruta uno  | c      | abc
+       tipo      RANGEAB| SIMPLE  | HOOK      | SIMPLE | BRACKET
+       continua  t      | (       | *         | ?      | {
+       setLoops  1-1    | 1-1     | 0-INF     | 0-1    | 2-3
+       continua  t      | (       | c         | [      | '\0'
+     #+END_EXAMPLE
+
+     si la exprecion siguiente es siginificativa =setLoops= corta y
+     establece una nueva posicion al fin de dicha exprecion.
+
+
+  El siguiente diagrama ofrece una vision aproximada del
+  funcionamiento del programa.
+
   file:regexp3.jpg
 
-* Contacto, contribuciones y otras cosas
+** Macros
+
+   #+BEGIN_SRC c
+     #define TRUE      1
+     #define FALSE     0
+     #define INF    1024
+     #define CATCHS   24
+   #+END_SRC
+
+   =INF= establece el numero maximo de ciclos de repeticion para cada
+   =track=.
+
+   =CATCHS= establece la cantidad de capturas maximas detro de cada
+   busqueda.
+
+** Estructuras y enumeracines
+
+   #+BEGIN_SRC c
+     struct PathLine {
+       char *line;
+       int   pos;
+       int   len;
+     };
+   #+END_SRC
+
+   =line= apunta al inicio de la cadena sobre la que se efectua la
+   busqueda, =pos= marca la posicion actual sobre la que se encuentra
+   la busqueda y =len= contiene la longitud de la cadena.
+
+   #+BEGIN_SRC c
+     struct LoopsRange {
+       int a, b;
+     };
+
+     enum PTYPE { PATH, HOOK, SIMPLE, BRACKET, RANGEAB, META, POINT };
+
+     struct Path {
+       int   len;
+       char *ptr;
+       enum   PTYPE type;
+       struct LoopsRange loopsRange;
+     };
+   #+END_SRC
+
+   =Path= contiene la exprecion regular, deacuerdo a cada funcion
+   puede ser llamada =path= o =track= para indicar si se trata de la
+   ruta principal o un divicion de esta.
+
+   =ptr= y =len= indican el inicio y longitud de la exprecion.
+
+   =type= indica el tipo.
+
+   - =PATH= ruta principal.
+   - =HOOK= agrupacion.
+   - =SIMPLE= texto simple directamente comparable.
+   - =BRACKET= clase de caracteres
+   - =RANGEAB= rango de caracteres.
+   - =META= metacaracter.
+   - =POINT= punto.
+
+
+   #+BEGIN_SRC c
+     struct CATch {
+       char *ptr[CATCHS];
+       int   len[CATCHS];
+       int   index;
+     } Catch;
+   #+END_SRC
+
+   =Catch= almacena un arreglo de apuntadores (=ptr=) al inicio de
+   cada captura y su longitud =len=. =index= indica el numero total de
+   capturas.
+
+* Contacto, contribucion y otras cosas
 
   [[mailto:nasciiboy@gmail.com]]

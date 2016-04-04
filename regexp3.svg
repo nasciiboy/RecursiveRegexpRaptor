@@ -16,7 +16,7 @@
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="regexp3.svg"
-   inkscape:export-filename="/home/nasciiboy/z/gan/regexp3.png"
+   inkscape:export-filename="/home/nasciiboy/nasciiboy.github.io/ncurses/regexp3/regexp3.png"
    inkscape:export-xdpi="93"
    inkscape:export-ydpi="93">
   <defs
@@ -28,11 +28,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.46639717"
-     inkscape:cx="883.14924"
-     inkscape:cy="-45.855309"
+     inkscape:zoom="0.62150376"
+     inkscape:cx="402.82349"
+     inkscape:cy="1197.6704"
      inkscape:document-units="px"
-     inkscape:current-layer="layer5"
+     inkscape:current-layer="layer2"
      showgrid="true"
      inkscape:snap-bbox="true"
      inkscape:bbox-nodes="true"
@@ -53,7 +53,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -346,7 +346,7 @@
        height="120"
        width="260"
        id="rect4383"
-       style="opacity:0.98000004;fill:#aaccff;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+       style="opacity:0.98000004;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
     <rect
        style="opacity:0.98000004;fill:#b3b3b3;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect4389"
@@ -420,14 +420,14 @@
     <text
        sodipodi:linespacing="125%"
        id="text4170"
-       y="482.51431"
-       x="-543.39008"
+       y="488.414"
+       x="-558.67206"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:45px;line-height:125%;font-family:MuseJazz;-inkscape-font-specification:'MuseJazz, Normal';text-align:justify;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        xml:space="preserve"><tspan
-         y="482.51431"
-         x="-543.39008"
+         y="488.414"
+         x="-558.67206"
          id="tspan4172"
-         sodipodi:role="line">walkRange</tspan></text>
+         sodipodi:role="line">walkBracket</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.25px;line-height:125%;font-family:'Droid Sans Mono';-inkscape-font-specification:'Droid Sans Mono, Normal';text-align:justify;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -518,14 +518,14 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:45px;line-height:125%;font-family:MuseJazz;-inkscape-font-specification:'MuseJazz, Normal';text-align:justify;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="191.44147"
-       y="1182.5143"
+       x="176.1595"
+       y="1188.4139"
        id="text4256"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan4258"
-         x="191.44147"
-         y="1182.5143">walkRange</tspan></text>
+         x="176.1595"
+         y="1188.4139">walkBracket</tspan></text>
     <text
        sodipodi:linespacing="125%"
        id="text4260"
@@ -674,7 +674,7 @@
        id="text4385"
        y="-41.6959"
        x="67.883301"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:45px;line-height:125%;font-family:MuseJazz;-inkscape-font-specification:'MuseJazz, Normal';text-align:justify;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:45px;line-height:125%;font-family:MuseJazz;-inkscape-font-specification:'MuseJazz, Normal';text-align:justify;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;"
        xml:space="preserve"><tspan
          y="-41.6959"
          x="67.883301"

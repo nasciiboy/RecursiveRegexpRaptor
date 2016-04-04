@@ -22,6 +22,11 @@ int rtest(){
     errs++;                                     \
   }
 
+  TRUE_TEST( "linea simple", "" );
+  TRUE_TEST( "linea simple", "^" );
+  TRUE_TEST( "linea simple", "|" );
+  TRUE_TEST( "linea simple", "()" );
+  TRUE_TEST( "linea simple", "|(|)" );
   TRUE_TEST( "linea simple", "a s" );
   TRUE_TEST( "linea simple", "^linea" );
   TRUE_TEST( "linea simple", "simple$" );
@@ -30,6 +35,8 @@ int rtest(){
   TRUE_TEST( "Handel", "H[eioau]ndel" );
   TRUE_TEST( "Handel", "Ha-zndel" );
   TRUE_TEST( "Handel", "H[1-9a-z]ndel" );
+  TRUE_TEST( "$|)}^", "([$|)}^])+" );
+  TRUE_TEST( "Handel", "H[^eiou]ndel" );
   TRUE_TEST( "Handel", "H[^eiou]ndel" );
   TRUE_TEST( "Handel", "H.ndel" );
   TRUE_TEST( "Hndel", "Ha?ndel" );
@@ -54,6 +61,8 @@ int rtest(){
     errs++;                                     \
   }
 
+  FALSE_TEST( "", "" );
+  FALSE_TEST( "", "expresion" );
   FALSE_TEST( "linea simple", "e s" );
   FALSE_TEST( "lineo simple", "^linea" );
   FALSE_TEST( "linea simple.", "simple$" );
