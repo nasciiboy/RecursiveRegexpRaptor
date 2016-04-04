@@ -1,0 +1,358 @@
+#+TITLE: Recursive Regexp Raptor (regexp3)
+#+AUTHOR: nasciiboy
+#+LANGUAGE: es
+#+STARTUP: showall
+#+OPTIONS: H:5 num:nil html-postamble:nil html-style:nil html-scripts:nil
+
+* Introduccion
+
+  *Recurseve Regexp Raptor* es una libreria de busqueda y captura de
+  expresiones regulares escrita en C, siguiendo (/buscando/) los
+  siguientes lineamientos:
+
+  - Cumplir con la mayoria de funciones esperadas por una libreria de
+    este tipo.
+
+  - Codigo elegante: sencillo, claro y dotado de gracia.
+
+  - Evitar peticion explicita de memoria dinamica.
+
+  - Ser util como material de aprendizaje.
+
+** Motivacion
+
+   Partiendo de que C no dispone de una libreria estandar de
+   expresiones regulares, el autor se planteo la busqueda de una
+   alternativa funcional de la cual aprender un poco, GNU tiene tanto
+   gawk como una libreria regexp, sin embargo el autor de este trabajo
+   (que igual y es un poco retard) encontro en ambas codigo rebuscado
+   y mistico repartido en varios ficheros, llenos de macros y
+   variables cripticas. La siguiente opcion fue [[https://github.com/cesanta/slre][slre]] donde se encontro
+   un codigo mas compacto aunque no menos rebuscado, con un diseño
+   poco claro que ademas fallaba si existia un nivel de anidamiento
+   siguiente al previo es decir:
+
+   #+BEGIN_EXAMPLE
+     (((a|b)))((x|b))
+     = 1 =====
+              = 2 === ERROR
+   #+END_EXAMPLE
+
+   asi que tras un retiro a la isla de la meditacion onanista se
+   propuso hacer su libreria con casinos y colegialas japonesas.
+
+** Desarrollo y pruebas
+
+   Se ha echo uso del "editor" GNU Emacs y el compilador gcc version
+   5.3.1, corriendo en fedora 23. Aparentemente en entornos *Nix, el
+   manejo de caracteres unicode no requiere consideraciones extra, a
+   diferencia de otros sistemas operativos menos serios donde hace
+   falta utilizar wmain, wchar, wprintf, w*$$@&!...
+
+   El autor recomienda el uso de sistemas y herramientas serias.
+
+   para compilar solo hace falta un
+
+   #+BEGIN_SRC sh
+     gcc test.c regexp3.c
+   #+END_SRC
+
+   para la ejecucion basta un confiable
+
+   #+BEGIN_SRC sh
+     ./a.out
+   #+END_SRC
+
+* Uso
+
+  La unica funcion de busqueda es =regep3= aqui su prototipo:
+
+  #+BEGIN_SRC c
+    int regexp3( char *line, char *exp );
+  #+END_SRC
+
+  - line :: apuntador a cadena sobre la que efectuar la busqueda, debe
+            finalizar con el signo de terminacion '\0'.
+
+  - exp  :: apuntador a cadena que contiene la expresion regular de
+            busqueda, debe finalizar con el signo de terminacion '\0'.
+
+
+  La funcion retorna =1= en caso de localizar la expresion dentro de
+  la cadena de busqueda. Regresa =0= en caso contrario.
+
+  Se disponen de la mayoria de funciones habituales
+
+  - busqueda de texto simple en cualquier lugar de una linea:
+
+    #+BEGIN_SRC c
+      regexp3( "linea simple", "a s" );
+    #+END_SRC
+
+  - busqueda posicional al inicio '^'
+
+    #+BEGIN_SRC c
+      regexp3( "linea simple", "^linea" );
+    #+END_SRC
+
+  - busqueda posicional al final '$'
+
+    #+BEGIN_SRC c
+      regexp3( "linea simple", "simple$" );
+    #+END_SRC
+
+  - busqueda posicional al inicio y final "^exp$"
+
+    #+BEGIN_SRC c
+      regexp3( "linea simple", "^linea simple$" );
+    #+END_SRC
+
+    - ADVERTENCIA ::
+
+         la busqueda posicional *solo* puede incluirse al inicio y
+         final del patron de busqueda (=exp=), incluir estos
+         caracteres en cualquier otra posicion (excluyendo "clases de
+         caracteres") es un error, para incluirlos como simples
+         caracteres antecedalos por doble diagonal "\\^" o "\\$".
+
+
+  - opciones de busqueda multiples "exp|exp"
+
+    #+BEGIN_SRC c
+      regexp3( "Handel", "Handel|Haendel|Dinosaurio" );
+    #+END_SRC
+
+  - Rango de caracteres "x-n"
+
+    #+BEGIN_SRC c
+      regexp3( "Handel", "Ha-zndel" );
+    #+END_SRC
+
+  - Clases de caracteres "[abc]"
+
+    #+BEGIN_SRC c
+      regexp3( "Handel", "H[eioau]ndel" );
+    #+END_SRC
+
+  - Rango(s) dentro de Clases de caracteres "[x-n]"
+
+    #+BEGIN_SRC c
+      regexp3( "Handel", "H[1-9a-z]ndel" );
+    #+END_SRC
+
+  - inversion de Clases de caracteres  "[^abc]"
+
+    #+BEGIN_SRC c
+      regexp3( "Handel", "H[^eiou]ndel" );
+    #+END_SRC
+
+  - coincidencia con cualquier caracter '.'
+
+    #+BEGIN_SRC c
+      regexp3( "Handel", "H.ndel" );
+    #+END_SRC
+
+  - coincidencia cere o una ves '?'
+
+    #+BEGIN_SRC c
+      regexp3( "Hndel", "Ha?ndel" );
+    #+END_SRC
+
+  - coincidencia una o mas veces '+'
+
+    #+BEGIN_SRC c
+      regexp3( "Haaandel", "Ha+ndel" );
+    #+END_SRC
+
+  - coincidencia cero o mas veces '*'
+
+    #+BEGIN_SRC c
+      regexp3( "Handel", "Hae*ndel" );
+    #+END_SRC
+
+  - rango de coincidencias '{n1,n2}'
+
+    #+BEGIN_SRC c
+      regexp3( "Haandel", "Ha{1,100}ndel" );
+    #+END_SRC
+
+  - numero de coincidencias especifico '{n1}'
+
+    #+BEGIN_SRC c
+      regexp3( "Haandel", "Ha{2}ndel" );
+    #+END_SRC
+
+  - agrupacion y captura "(exp)"
+
+    #+BEGIN_SRC c
+      regexp3( "Handel", "(Handel)" );
+    #+END_SRC
+
+** Recuperacion de captura
+
+   Cualquier agrupacion exitosa, genera una captura del texto
+   localizado, dichas capturas se almacenan segun el orden de
+   aparicion y posicion dentro del agrupamiento por ejemplo:
+
+   #+BEGIN_EXAMPLE
+     (   (   )  | (   (   )   )   )
+     = 1 ==========================
+         = 2==
+                  = 2 =========
+                      = 3 =
+   #+END_EXAMPLE
+
+   para recuperar una captura se hace uso de la funcion =getCatch=,
+   aqui su prototipo:
+
+   #+BEGIN_SRC c
+     char * getCatch( int index )
+   #+END_SRC
+
+   - index :: este argumento representa el indice de agrupacion a
+              recuperar de =1= a =n=
+
+
+   la funcion regeresa un apuntador a la captura terminada en '\0'. Un
+   indice incorrecto regresara un apuntador que inicia en '\0'.
+
+   para optener el numero de agrupaciones capturadas utlice:
+
+   #+BEGIN_SRC c
+     int CatchIndex();
+   #+END_SRC
+
+   que regresa un valor de =0= a =n=. Podria utilzar esta y la
+   anterior funcion para imprimir las agrupaciones capturadas con una
+   funcion como:
+
+   #+BEGIN_SRC c
+     void printCatch(){
+       int i = 0, max = CatchIndex();
+
+       while( ++i <= max )
+         printf( "#%d# >%s<\n", i, getCatch( i ) );
+     }
+   #+END_SRC
+
+** Metacaracteres de busqueda
+
+   - \\ : diagonal
+   - \a : "campana"
+   - \e : "Esc"
+   - \f : salto de página
+   - \n : "nueva línea"
+   - \r : "retorno de carro"
+   - \t : tabulador.
+   - \v : tabulador vertical
+   - \x : exadecimal  8 bits 00-ff
+   - \u : exadecimal 16 bits 0000-FFFF
+
+
+   - NOTA :: los anteriores caracteres estan por defecto incluidos en
+             c, no fue necesario implementarlos.
+
+
+   - \\d : dígito del 0 al 9.
+   - \\D : cualquier carácter que no sea un dígito del 0 al 9.
+   - \\w : cualquier carácter alfanumérico.
+   - \\W : cualquier carácter no alfanumérico.
+   - \\s : espacio en blanco.
+   - \\S : cualquier carácter que no sea un espacio en blanco.
+
+
+   - NOTA :: los anteriores (y siguietes) caracteres requieren doble
+             '\\' para escapar '\' y dar significado de meta caracter.
+
+
+   - \\| : barra vertical
+   - \\^ : acento circunflejo
+   - \\$ : signo dolar
+   - \\( : parentesis izquierdo
+   - \\) : parentesis derecho
+   - \\[ : corchete izquierdo
+   - \\] : corchete derecho
+   - \\. : punto
+   - \\? : interrogacion
+   - \\+ : mas
+   - \\- : menos
+   - \\* : asterisco
+   - \\{ : llave izquierda
+   - \\} : llave derecha
+
+
+   - NOTA :: los anteriores caracteres insertan un caracter con
+             significado especial para su busqueda dentro de la
+             cadena, incluir el caracter tal cual (sin doble escape
+             '\\') en cualquier lugar es erroneo por ejemplo:
+
+             #+BEGIN_EXAMPLE
+               "(agrupacion[erronea)"
+             #+END_EXAMPLE
+
+             en lugar de
+
+             #+BEGIN_EXAMPLE
+               "(agrupacion\\[correcta)"
+             #+END_EXAMPLE
+
+             puede generar un error durante el analicis de la cadena
+             de busqueda y probocar un ciclo infinito y/o otros
+             sucesos apocalipticos.
+
+** ejemplos interesantes de busqueda
+
+   #+BEGIN_SRC c
+      regexp3( "▞▞▞▞aaaa1aaa", "((\u259e?){3,100}(\\D)*(\\d?)\\w+)*" );
+   #+END_SRC
+
+   busqueda y captura de tres o mas caracteres unicode '▞' que pueden
+   estar o no presentes, seguido por cero o mas caracteres que no son
+   numero, seguido por uno o ningun digito, seguido por uno a mas
+   caracteres, todo buscado cero o mas veces
+
+   #+BEGIN_SRC c
+      regexp3( "1999-12-05", "((\\d){2,4}(\\-|/)(\\d)*(\\W{1})(\\d+))" );
+   #+END_SRC
+
+   captura algo parecido a una fecha (cifras y separadores) separado
+   por '-' o '/' y un caracter no alfanumerico
+
+   #+BEGIN_SRC c
+      regexp3( "<a href=\"https://es.wikipedia.org/wiki/Expresi%C3%B3n_regular\">", "((https?://)([^\"])*)" );
+   #+END_SRC
+
+   capturar algo parecido a un enlace web
+
+   #+BEGIN_SRC c
+     regexp3( "contacto (nasciiboy@gmail.com) $$", "(\\w+@\\w+\\.\\w+)" );
+   #+END_SRC
+
+   capturar algo parecido a un correo.
+
+   #+BEGIN_SRC c
+      regexp3( "1. rango entre 1985-2014.", "\\D?(\\d{4})\\D?" );
+   #+END_SRC
+
+   capturar primer cifra parecida a un año
+
+   #+BEGIN_SRC c
+      regexp3( "1. rango entre 1985-2014.", "\\D?(\\d{4})\\D?$" );
+   #+END_SRC
+
+   captura ultima cifra parecida a un año
+
+   #+BEGIN_SRC c
+      regexp3( "linea86\nlinea87", "no|41|(di|no|saurio|((s|a|l)+i*ne(a[^\\D]{2}))\n?)+" );
+   #+END_SRC
+
+   expresion inecesariamente compleja para capturar "lineaxx" u otras
+   cosas
+
+* Hacking
+
+  file:regexp3.jpg
+
+* Contacto, contribuciones y otras cosas
+
+  [[mailto:nasciiboy@gmail.com]]
