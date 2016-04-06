@@ -47,7 +47,7 @@ void  openCatch   ( struct Path *track, struct PathLine *pathLine, int *index );
 void  closeCatch  ( struct Path *track, struct PathLine *pathLine, int  index );
 void  delCatch    ( struct Path *track,                            int  index );
 int   CatchIndex  (                                                           );
-char *getCatch    (                                                int  index );
+char *getCatch    (                           char     *lineCatch, int  index );
 int   match       ( struct Path *text, struct PathLine *pathLine              );
 int   matchBracket( struct Path *text, struct PathLine *pathLine              );
 int   matchMeta   ( struct Path *text,        char     *line                  );
@@ -308,8 +308,7 @@ int CatchIndex(){
   return Catch.index;
 }
 
-char * getCatch( int index ){
-  static char lineCatch[ INF ];
+char * getCatch( char * lineCatch, int index ){
   if( index > 0 && index <= Catch.index ){
     index--;
     strncpy( lineCatch, Catch.ptr[ index ], Catch.len[ index ] );

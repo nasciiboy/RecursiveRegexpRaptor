@@ -215,17 +215,20 @@
    aqui su prototipo:
 
    #+BEGIN_SRC c
-     char * getCatch( int index )
+     char * getCatch( char * lineCatch, int index )
    #+END_SRC
 
-   - index :: este argumento representa el indice de agrupacion a
-              recuperar de =1= a =n=
+   - lineCatch :: puntero lo suficientemete grande para contener la
+                  agrupacion.
+
+   - index     :: indice de agrupacion a recuperar de =1= a =n=.
 
 
    la funcion regeresa un apuntador a la captura terminada en '\0'. Un
    indice incorrecto regresara un apuntador que inicia en '\0'.
 
-   para optener el numero de agrupaciones capturadas utlice:
+   para optener el numero de agrupaciones capturadas utlice
+   =CatchIndex=:
 
    #+BEGIN_SRC c
      int CatchIndex();
@@ -236,11 +239,12 @@
    funcion como:
 
    #+BEGIN_SRC c
+     char lineCatch[128];
      void printCatch(){
        int i = 0, max = CatchIndex();
 
        while( ++i <= max )
-         printf( "#%d# >%s<\n", i, getCatch( i ) );
+         printf( "#%d# >%s<\n", i, getCatch( lineCatch, i ) );
      }
    #+END_SRC
 

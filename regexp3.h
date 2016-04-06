@@ -17,5 +17,5 @@
  ************************************************************************/
 
 int    regexp3( char *line, char *exp );
-char * getCatch( int index );
+char * getCatch( char * lineCatch, int index );
 int    CatchIndex();

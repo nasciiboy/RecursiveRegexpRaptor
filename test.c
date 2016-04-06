@@ -3,10 +3,11 @@
 #include "regexp3.h"
 
 void printCatch(){
+  char lineCatch[128];
   int i = 0, max = CatchIndex();
 
   while( ++i <= max )
-    printf( "#%d# >%s<\n", i, getCatch( i ) );
+    printf( "#%d# >%s<\n", i, getCatch( lineCatch, i ) );
 }
 
 int rtest(){
@@ -36,7 +37,6 @@ int rtest(){
   TRUE_TEST( "Handel", "Ha-zndel" );
   TRUE_TEST( "Handel", "H[1-9a-z]ndel" );
   TRUE_TEST( "$|)}^", "([$|)}^])+" );
-  TRUE_TEST( "Handel", "H[^eiou]ndel" );
   TRUE_TEST( "Handel", "H[^eiou]ndel" );
   TRUE_TEST( "Handel", "H.ndel" );
   TRUE_TEST( "Hndel", "Ha?ndel" );
@@ -93,7 +93,7 @@ int rtest(){
 
 int main(){
   if( rtest() )
-    puts( "i am the walrus" );
+    puts( "i am the raptor" );
 
   return 0;
 }
