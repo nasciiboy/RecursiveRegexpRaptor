@@ -239,8 +239,8 @@
    funcion como:
 
    #+BEGIN_SRC c
-     char lineCatch[128];
      void printCatch(){
+       char lineCatch[128];
        int i = 0, max = CatchIndex();
 
        while( ++i <= max )
