@@ -22,35 +22,38 @@
 ** Motivacion
 
    Partiendo de que C no dispone de una libreria estandar de
-   expresiones regulares, el autor se planteo la busqueda de una
-   alternativa funcional de la cual aprender un poco, GNU tiene tanto
-   gawk como una libreria regexp, sin embargo el autor de este trabajo
-   (que igual y es un poco retard) encontro en ambas codigo rebuscado
-   y mistico repartido en varios ficheros, llenos de macros y
-   variables cripticas. La siguiente opcion fue [[https://github.com/cesanta/slre][slre]] donde se encontro
-   un codigo mas compacto aunque no menos rebuscado, con un diseño
-   poco claro que ademas fallaba si existia un nivel de anidamiento
-   siguiente al previo es decir:
+   expresiones regulares, se planteo la busqueda de una alternativa
+   funcional de la cual aprender un poco, GNU tiene tanto gawk como la
+   libreria regexp, sin embargo el autor de este trabajo (que igual y
+   es un poco retard) encontro en ambas codigo rebuscado y mistico
+   repartido en varios ficheros, llenos de macros y variables
+   cripticas.
+
+   La siguiente opcion fue [[https://github.com/cesanta/slre][slre]] cuya principal cararacteristica
+   promacional es tener codigo compacto, aunque no mas claro, que
+   ademas fallaba si existia un nivel de anidamiento siguiente al
+   previo es decir:
 
    #+BEGIN_EXAMPLE
      (((a|b)))((x|b))
-     = 1 =====
+     = 1 =====        OK
               = 2 === ERROR
    #+END_EXAMPLE
 
-   asi que tras un retiro a la isla de la meditacion onanista se
-   propuso hacer su propia libreria con casinos y colegialas
-   japonesas.
+   desepcionado y tras un retiro a la isla de la meditacion onanista
+   el autor se propuso hacer su propia libreria con casinos y
+   colegialas japonesas.
 
 ** Desarrollo y pruebas
 
    Se ha echo uso del "editor" GNU Emacs y el compilador gcc version
-   5.3.1, corriendo en fedora 23. Aparentemente en entornos *Nix, el
-   manejo de caracteres unicode no requiere consideraciones extra, a
-   diferencia de otros sistemas operativos menos serios donde hace
-   falta utilizar wmain, wchar, wprintf, w*$$@&!...
+   5.3.1, corriendo en fedora 23.
 
-   El autor recomienda el uso de sistemas y herramientas serias.
+   Aparentemente en entornos *nix, el manejo de caracteres unicode no
+   requiere consideraciones extra, a diferencia de otros sistemas
+   operativos poco serios donde hace falta utilizar wmain, wchar,
+   wprintf, w*$$@&!... (no se recomienda el uso de sistemas para
+   aficionados)
 
    para compilar solo hace falta un
 
@@ -66,7 +69,7 @@
 
 * Uso
 
-  La unica funcion de busqueda es =regep3= aqui su prototipo:
+  La unica funcion de busqueda es =regexp3= aqui su prototipo:
 
   #+BEGIN_SRC c
     int regexp3( char *line, char *exp );
@@ -529,6 +532,13 @@
    =Catch= almacena un arreglo de apuntadores (=ptr=) al inicio de
    cada captura y su longitud =len=. =index= indica el numero total de
    capturas.
+
+* Licencia
+
+  Este proyecto no es de codigo "abierto", es *software libre*, y
+  acorde a ello se utiliza la licencia GNU GPL Version 3. Cualquier
+  obra que incluya o derive codigo de esta libreria, debera cumplir
+  con los terminos de esta licencia.
 
 * Contacto, contribucion y otras cosas
 
