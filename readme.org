@@ -30,7 +30,7 @@
    cripticas.
 
    La siguiente opcion fue [[https://github.com/cesanta/slre][slre]] cuya principal cararacteristica
-   promacional es tener codigo compacto, aunque no mas claro, que
+   promocional es tener codigo compacto, aunque no mas claro, que
    ademas fallaba si existia un nivel de anidamiento siguiente al
    previo es decir:
 
@@ -82,8 +82,8 @@
             busqueda, debe finalizar con el signo de terminacion '\0'.
 
 
-  La funcion retorna =1= en caso de localizar la expresion dentro de
-  la cadena de busqueda. Regresa =0= en caso contrario.
+  La funcion regresa el numero de coincidencias localizadas sobre el
+  argumento =line= es decir de =0= (ninguna) a =n= coincidencias.
 
   Se disponen de la mayoria de funciones habituales
 
@@ -194,23 +194,28 @@
       regexp3( "Haandel", "Ha{2}ndel" );
     #+END_SRC
 
-  - agrupacion y captura "(exp)"
+  - agrupacion "(exp)"
 
     #+BEGIN_SRC c
       regexp3( "Handel", "(Handel)" );
     #+END_SRC
 
+  - agrupacion con captura "<exp>"
+
+    #+BEGIN_SRC c
+      regexp3( "Handel", "<Handel>" );
+    #+END_SRC
+
 ** Recuperacion de captura
 
-   Cualquier agrupacion exitosa, genera una captura del texto
+   Cualquier agrupacion "<exp>" exitosa, genera una captura del texto
    localizado, dichas capturas se almacenan segun el orden de
    aparicion y posicion dentro del agrupamiento por ejemplo:
 
    #+BEGIN_EXAMPLE
-     (   (   )  | (   (   )   )   )
+     <   <   >  | <   <   >   >   >
      = 1 ==========================
-         = 2==
-                  = 2 =========
+         = 2==    = 2 =========
                       = 3 =
    #+END_EXAMPLE
 
@@ -251,6 +256,30 @@
      }
    #+END_SRC
 
+** Reeplazo de captura
+
+   El reemplazo opera sobre una copia de la linea sobre la que se
+   efectua la busqueda, la funcion para esta labor es =replaceCatch=,
+   su prototipo es:
+
+   #+BEGIN_SRC c
+     char * replaceCatch( char * newLine, char * str, int index );
+   #+END_SRC
+
+   - newLine :: arreglo de caracteres lo suficientemente grande para
+                contener la linea sobre la que se efectua la busqueda,
+                tomando en cuenta el numero y dimencion de capturas a
+                reemplazar.
+
+   - str     :: cadena de caracteres con la cual reemplazar la
+                captura.
+
+   - index   :: indice de captura segun su orden de aparicion, =0=
+                indica reemplazar todas las capturas con la cadena de
+                reemplazo =str=. Pasar un indice superior al indice de
+                capturas, coloca una copia de la cadena de busqueda
+                sombre el arreglo =newLine=.
+
 ** Metacaracteres de busqueda
 
    - \\ : diagonal
@@ -286,6 +315,8 @@
    - \\$ : signo dolar
    - \\( : parentesis izquierdo
    - \\) : parentesis derecho
+   - \\< : mayor que
+   - \\> : menor que
    - \\[ : corchete izquierdo
    - \\] : corchete derecho
    - \\. : punto
@@ -430,9 +461,9 @@
      contrario el =track= es comparable directamente y se optiene un
      resultado que es enviado a =walker= quien responde a =regexp3=.
 
-     Cuando se requiere una nueva reduccion la respuesta se optiene
-     por =walker= quien inicia todo el proceso anterior hasta que
-     algun =trekking= responde positiva o negativamente.
+     Cuando se requiere una nueva reduccion se envia una copia del
+     =track= a =walker= quien inicia una vez mas todo el proceso
+     anterior hasta optener un resultado por parte de =trekking=.
 
   3. optener el numero de ciclos de repeticion para cada
      ruta/trayecto/expresion
@@ -440,7 +471,7 @@
      una vez que =tracker= a reducido una ruta a trayecto, envia dicho
      trayecto a =setLoops= quien dependiento lo que encuentre a
      continuacion establece el numero de repeticiones en la variable
-     =LoopRange= (miembro de =Path=).
+     =LoopRange= (miembro de la estructura =Path=).
 
      #+BEGIN_EXAMPLE
        trekking  a-z    texto     (ruta uno)  *c       ?[abc]     {2,3}
@@ -505,8 +536,9 @@
    #+END_SRC
 
    =Path= contiene la exprecion regular, deacuerdo a cada funcion
-   puede ser llamada =path= o =track= para indicar si se trata de la
-   ruta principal o un divicion de esta.
+   puede ser llamada =path=, =track= o =text= para indicar si se trata
+   de la ruta principal, un divicion de esta, o texto para una
+   comparacion directa.
 
    =ptr= y =len= indican el inicio y longitud de la exprecion.
 

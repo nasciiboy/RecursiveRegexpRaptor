@@ -19,3 +19,4 @@
 int    regexp3( char *line, char *exp );
 char * getCatch( char * lineCatch, int index );
 int    CatchIndex();
+char * replaceCatch( char * newLine, char * str, int index );
