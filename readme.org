@@ -256,11 +256,11 @@
      }
    #+END_SRC
 
-** Reeplazo de captura
+** Reemplazo de captura
 
-   El reemplazo opera sobre una copia de la linea sobre la que se
-   efectua la busqueda, la funcion para esta labor es =replaceCatch=,
-   su prototipo es:
+   El reemplazo opera sobre un arreglo de caracteres en el cual se
+   coloca la linea de busqueda con las capturas reemplazadas, la
+   funcion encargada de esta labor es =replaceCatch=, su prototipo es:
 
    #+BEGIN_SRC c
      char * replaceCatch( char * newLine, char * str, int index );
@@ -276,9 +276,9 @@
 
    - index   :: indice de captura segun su orden de aparicion, =0=
                 indica reemplazar todas las capturas con la cadena de
-                reemplazo =str=. Pasar un indice superior al indice de
-                capturas, coloca una copia de la cadena de busqueda
-                sombre el arreglo =newLine=.
+                reemplazo =str=. Pasar un indice superior al numero de
+                capturas, coloca una copia sin modificacion de la
+                cadena de busqueda sombre el arreglo =newLine=.
 
 ** Metacaracteres de busqueda
 

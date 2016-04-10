@@ -40,7 +40,6 @@ int   trekking    ( struct Path  *path,   struct PathLine *pathLine             
 int   tracker     ( struct Path  *path,   struct Path     *track                 );
 int   walkMeta    (                              char     *str                   );
 int   walkBracket (                              char     *str                   );
-int   isMeta      (                              char     *str                   );
 int   isPath      ( struct Path *track                                           );
 void  setLoops    ( struct Path *track,   struct Path     *path                  );
 void  openCatch   ( struct Path *track,   struct PathLine *pathLine,  int *index );
@@ -82,7 +81,7 @@ int regexp3( char *line, char *exp ){
   for( int i = 0; i < loops; i++ ){
     pathLine.pos  = 0;
     pathLine.line = line + i;
-    pathLine.len  = strlen( line ) - i;
+    pathLine.len  = Catch.len[0] - i;
 
     if( atTheEnd ){
       result = walker( path, &pathLine );
@@ -114,10 +113,12 @@ int cutTrack( struct Path *path, struct Path *track, int type ){
 
   for( i = deep = 0; i < path->len; i++ ){
     i += walkMeta ( path->ptr + i );
-    i += type == BRACKET ? 0 : walkBracket( path->ptr + i );
+    i += walkBracket( path->ptr + i );
 
-    if( strchr( "<(", path->ptr[i] ) ) deep++;
-    if( strchr( ")>", path->ptr[i] ) ) deep--;
+    switch( path->ptr[i] ){
+    case '<': case '(': deep++; break;
+    case '>': case ')': deep--; break;
+    }
 
     switch( type ){
     case HOOK    : cut = deep == 0; break;
@@ -127,9 +128,9 @@ int cutTrack( struct Path *path, struct Path *track, int type ){
     }
 
     if( cut && i < path->len){
-      track->len = &path->ptr[i] - track->ptr;
-      path->ptr = path->ptr + i + 1;
-      path->len = path->len - i - 1;
+      track->len  = &path->ptr[i] - track->ptr;
+      path->ptr  += i + 1;
+      path->len  -= i + 1;
       track->type = type;
       return TRUE;
     }
@@ -181,20 +182,16 @@ int tracker( struct Path *path, struct Path *track ){
   track->type = SIMPLE;
 
   for( i = 0; i < path->len; i++ ){
-    if( strchr( ".[(<", path->ptr[i] ) || isMeta( path->ptr + i ) ){
-      if( i > 0 ){
-        trackByLen( path, track, i, SIMPLE );
-      } else if( isMeta( path->ptr ) ){
-        trackByLen( path, track, 2, META );
-      } else if( *path->ptr == '.' ){
-        trackByLen( path, track, 1, POINT );
-      } else if( *path->ptr == '(' ){
-        cutTrack( path, track, GROUP );
-      } else if( *path->ptr == '<' ){
-        cutTrack( path, track, HOOK );
-      } else if( *path->ptr == '[' ){
-        cutTrack( path, track, BRACKET );
-      }
+    if( strchr( ".[(<\\", path->ptr[i] ) ){
+      if( i > 0 )  trackByLen( path, track, i, SIMPLE  );
+      else
+        switch( *path->ptr ){
+        case '\\': trackByLen( path, track, 2, META    ); break;
+        case '.' : trackByLen( path, track, 1, POINT   ); break;
+        case '(' : cutTrack  ( path, track,    GROUP   ); break;
+        case '<' : cutTrack  ( path, track,    HOOK    ); break;
+        case '[' : cutTrack  ( path, track,    BRACKET ); break;
+        }
 
       setLoops( track, path );
       return TRUE;
@@ -206,11 +203,10 @@ int tracker( struct Path *path, struct Path *track ){
         path->ptr = path->ptr + i - 1;
         path->len = path->len - i + 1;
       } else if( i == 1 ){
-        if( path->ptr[i] == '-' ){
+        if( path->ptr[i] == '-' )
           trackByLen( path, track, 3, RANGEAB );
-        } else {
-          trackByLen( path, track, 1, SIMPLE );
-        }
+        else
+          trackByLen( path, track, 1, SIMPLE  );
       }
 
       setLoops( track, path );
@@ -230,9 +226,7 @@ int tracker( struct Path *path, struct Path *track ){
 
 int walkMeta( char *str ){
   int i = 0;
-  while( str[i] == '\\' )
-    if( isMeta( str + i ) ) i += 2;
-    else return i;
+  while( str[i] == '\\' ) i += 2;
 
   return i;
 }
@@ -246,18 +240,11 @@ int walkBracket( char *str ){
   return i;
 }
 
-int isMeta( char *str ){
-  if( *str == '\\' )
-    return strchr( "|^$()<>[].?+*{}-dDwWsS", str[ 1 ] ) != 0;
-
-  return FALSE;
-}
-
 int isPath( struct Path *track ){
   if( track->type == META || track->type == BRACKET || track->type == RANGEAB ) return FALSE;
 
   for( int i = 0; i < track->len; i++ )
-    if(  isMeta( track->ptr + i ) || strchr( "|(<[?+*{-", track->ptr[i] ) )
+    if( strchr( "|(<[?+*{-\\", track->ptr[i] ) )
       return TRUE;
 
   return FALSE;
@@ -386,17 +373,15 @@ int matchBracket( struct Path *text, struct PathLine *pathLine ){
 }
 
 int matchMeta( struct Path *text, char *line ){
-  if( strchr( "|^$()<>[].?+*{}-", text->ptr[1] ) )
-    return *line == text->ptr[1];
-  else
-    switch( text->ptr[1] ){
-    case 'd' : return  isdigit(*line); break;
-    case 'D' : return !isdigit(*line); break;
-    case 'w' : return  isalnum(*line); break;
-    case 'W' : return !isalnum(*line); break;
-    case 's' : return  isspace(*line); break;
-    case 'S' : return !isspace(*line); break;
-    }
+  switch( text->ptr[1] ){
+  case 'd' : return  isdigit(*line);
+  case 'D' : return !isdigit(*line);
+  case 'w' : return  isalnum(*line);
+  case 'W' : return !isalnum(*line);
+  case 's' : return  isspace(*line);
+  case 'S' : return !isspace(*line);
+  default  : return *line == text->ptr[1];
+  }
 }
 
 int matchText( struct Path *text, char *line ){
