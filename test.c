@@ -5,7 +5,7 @@
 
 void printCatch(){
   char lineCatch[128];
-  int i = 0, max = CatchIndex();
+  int i = 0, max = indexCatch();
 
   while( ++i <= max )
     printf( "#%d# >%s<\n", i, getCatch( lineCatch, i ) );
@@ -45,8 +45,12 @@ int rtest(){
   TRUE_TEST( "Handel", "Hae*ndel" );
   TRUE_TEST( "Haandel", "Ha{1,100}ndel" );
   TRUE_TEST( "Haandel", "Ha{2}ndel" );
+  TRUE_TEST( "Handel", "H\141ndel" );
+  TRUE_TEST( "Handel", "H\x61ndel" );
+  TRUE_TEST( "Handel", "H\x61ndel" );
+  TRUE_TEST( "|()<>[]?+*{}-\\", "<\\|\\(\\)\\<\\>\\[\\]\\?\\+\\*\\{\\}\\-\\\\>" );
+  TRUE_TEST( "Haéndel", "Ha\u00E9ndel" );
   TRUE_TEST( "Handel", "(Handel)" );
-  TRUE_TEST( "Handel", "Hae*ndel" );
   TRUE_TEST( "▞▞▞▞aaaa1aaa", "((\u259e?){3,100}(\\D)*(\\d?)\\w+)*" );
   TRUE_TEST( "1999-12-05", "((\\d){2,4}(\\-|/)(\\d)*(\\W{1})(\\d+))" );
   TRUE_TEST( "<a href=\"https://es.wikipedia.org/wiki/Expresi%C3%B3n_regular\">", "((https?://)([^\"])*)" );
@@ -144,20 +148,17 @@ int rtest(){
   }
 
   CATCH_AND_REPLACE_TEST( "linea simple", "<linea>", 1, "dog", "dog simple"   );
-  CATCH_AND_REPLACE_TEST( "linea simple", "<linea>", 0, "dog", "dog simple"   );
-  CATCH_AND_REPLACE_TEST( "linea simple", "<linea|simple>", 0, "dog", "dog dog"   );
-  CATCH_AND_REPLACE_TEST( "linea simple", "<linea|simple>", 1, "dog", "dog simple"   );
-  CATCH_AND_REPLACE_TEST( "linea simple", "<linea|simple>", 2, "dog", "linea dog"   );
-  CATCH_AND_REPLACE_TEST( "linea lineass lineashh", "<linea\\w*>", 1, "dog", "dog lineass lineashh" );
-  CATCH_AND_REPLACE_TEST( "linea lineass lineashh", "<linea\\w*>", 2, "dog", "linea dog lineashh" );
-  CATCH_AND_REPLACE_TEST( "linea lineass lineashh", "<linea\\w*>", 3, "dog", "linea lineass dog" );
-  CATCH_AND_REPLACE_TEST( "linea lineass lineashh", "<linea\\w*>", 4, "dog", "linea lineass lineashh" );
-  CATCH_AND_REPLACE_TEST( "linea lineass lineashh", "<linea\\w*>", 0, "dog", "dog dog dog" );
-  CATCH_AND_REPLACE_TEST( "linea lineass lineashh", "<linea(\\w*)>", 0, "dog", "dog dog dog" );
-  CATCH_AND_REPLACE_TEST( "linea lineass lineashh", "<linea(\\w*|raptor)>", 0, "dog", "dog dog dog" );
+  CATCH_AND_REPLACE_TEST( "linea simple", "<linea>", 0, "dog", "linea simple"   );
+  CATCH_AND_REPLACE_TEST( "linea simple", "<linea|simple>", 0, "dog", "linea simple"   );
+  CATCH_AND_REPLACE_TEST( "linea simple", "<linea|simple>", 1, "dog", "dog dog"   );
+  CATCH_AND_REPLACE_TEST( "linea simple", "<linea|simple>", 2, "dog", "linea simple"   );
+  CATCH_AND_REPLACE_TEST( "linea lineass lineashh", "<linea\\w*>", 1, "dog", "dog dog dog" );
+  CATCH_AND_REPLACE_TEST( "linea lineass lineashh", "<linea(\\w*|raptor)>", 1, "dog", "dog dog dog" );
   CATCH_AND_REPLACE_TEST( "1988 1699 2085", "^<19<[\\d]{2}>>( (1699|2085))", 1, "raptor", "raptor 1699 2085" );
   CATCH_AND_REPLACE_TEST( "1988 1699 2085", "^<19<[\\d]{2}>>( (1699|2085))", 2, "raptor", "19raptor 1699 2085" );
   CATCH_AND_REPLACE_TEST( "1988 1699 2085", "^<19<[\\d]{2}>>( 1699 2085))$", 2, "raptor", "19raptor 1699 2085" );
+  CATCH_AND_REPLACE_TEST( "1988 1699 2085 1988 1699 2085 1988 1699 2085", "<19<[\\d]{2}>>( 1699 2085))$", 1, "raptor", "raptor 1699 2085 raptor 1699 2085 raptor 1699 2085" );
+  CATCH_AND_REPLACE_TEST( "1988 1699 2085 1988 1699 2085 1988 1699 2085", "<19<[\\d]{2}>>( 1699 2085))$", 2, "raptor", "19raptor 1699 2085 19raptor 1699 2085 19raptor 1699 2085" );
 
 
   printf( "TEST %d *** ERRS %d\n\n", total, errs );

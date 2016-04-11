@@ -18,5 +18,5 @@
 
 int    regexp3( char *line, char *exp );
 char * getCatch( char * lineCatch, int index );
-int    CatchIndex();
+int    indexCatch();
 char * replaceCatch( char * newLine, char * str, int index );

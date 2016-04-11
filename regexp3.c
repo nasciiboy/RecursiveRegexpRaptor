@@ -12,6 +12,8 @@
 struct CATch {
   char *ptr[CATCHS];
   int   len[CATCHS];
+  int   id [CATCHS];
+  int   idx;
   int   index;
 } Catch;
 
@@ -59,7 +61,6 @@ int regexp3( char *line, char *exp ){
   int atTheEnd  = FALSE;
   int result    = 0;
   int loops     = strlen( line );
-
   path.ptr      = exp;
   path.len      = strlen( exp );
   path.type     = PATH;
@@ -79,6 +80,7 @@ int regexp3( char *line, char *exp ){
   }
 
   for( int i = 0; i < loops; i++ ){
+    Catch.idx     = 1;
     pathLine.pos  = 0;
     pathLine.line = line + i;
     pathLine.len  = Catch.len[0] - i;
@@ -97,7 +99,6 @@ int regexp3( char *line, char *exp ){
 
 int walker( struct Path path, struct PathLine *pathLine ){
   struct Path track;
-
   while( cutTrack( &path, &track, PATH ) )
     if( walker( track,  pathLine ) )
       return TRUE;
@@ -142,6 +143,7 @@ int cutTrack( struct Path *path, struct Path *track, int type ){
 int trekking( struct Path *path, struct PathLine *pathLine ){
   struct Path track;
   int npos = 0, loop , len, iCatch;
+
   while( tracker( path, &track ) ){
     openCatch( &track, pathLine, &iCatch);
 
@@ -169,54 +171,44 @@ int trekking( struct Path *path, struct PathLine *pathLine ){
 }
 
 void trackByLen( struct Path *path, struct Path *track, int len, int type ){
+  track->ptr   = path->ptr;
   track->type  = type;
   track->len   = len;
   path->ptr   += len;
   path->len   -= len;
 }
 
+char * strnpbrk( char *cs, char *ct, int n ){
+  for( int i = 0; i < n && ct[ i ]; i++ )
+    if( strchr( cs, ct[ i ] ) ) return ct + i;
+
+  return 0;
+}
+
 int tracker( struct Path *path, struct Path *track ){
-  int i;
-  track->ptr  = path->ptr;
-  track->len  = path->len;
-  track->type = SIMPLE;
+  if( path->len ){
+    char *pchar;
 
-  for( i = 0; i < path->len; i++ ){
-    if( strchr( ".[(<\\", path->ptr[i] ) ){
-      if( i > 0 )  trackByLen( path, track, i, SIMPLE  );
-      else
-        switch( *path->ptr ){
-        case '\\': trackByLen( path, track, 2, META    ); break;
-        case '.' : trackByLen( path, track, 1, POINT   ); break;
-        case '(' : cutTrack  ( path, track,    GROUP   ); break;
-        case '<' : cutTrack  ( path, track,    HOOK    ); break;
-        case '[' : cutTrack  ( path, track,    BRACKET ); break;
+    switch( *path->ptr ){
+    case '\\': trackByLen( path, track, 2, META    ); break;
+    case '.' : trackByLen( path, track, 1, POINT   ); break;
+    case '(' : cutTrack  ( path, track,    GROUP   ); break;
+    case '<' : cutTrack  ( path, track,    HOOK    ); break;
+    case '[' : cutTrack  ( path, track,    BRACKET ); break;
+    default:
+      if( pchar = strnpbrk( ".[(<\\?+*{-", path->ptr + 1, path->len - 1) ){
+        switch( *pchar ){
+        case '.': case '[': case '(': case '<': case '\\':
+          trackByLen( path, track, pchar - path->ptr, SIMPLE  ); break;
+        case '?': case '+': case '*': case '{': case '-':
+          if( pchar - path->ptr == 1 ){
+            if( *pchar == '-' ) trackByLen( path, track, 3, RANGEAB );
+            else                trackByLen( path, track, 1, SIMPLE  );
+          } else trackByLen( path, track, (pchar - path->ptr) - 1, SIMPLE  );
         }
-
-      setLoops( track, path );
-      return TRUE;
+      } else trackByLen( path, track, path->len, SIMPLE  );
     }
 
-    if( strchr( "?+*{-", path->ptr[i] ) ){
-      if( i > 1 ){
-        track->len = &path->ptr[i] - track->ptr - 1;
-        path->ptr = path->ptr + i - 1;
-        path->len = path->len - i + 1;
-      } else if( i == 1 ){
-        if( path->ptr[i] == '-' )
-          trackByLen( path, track, 3, RANGEAB );
-        else
-          trackByLen( path, track, 1, SIMPLE  );
-      }
-
-      setLoops( track, path );
-      return TRUE;
-    }
-  }
-
-  if( track->len > 0 ){
-    path->ptr += i;
-    path->len  = 0;
     setLoops( track, path );
     return TRUE;
   }
@@ -260,21 +252,20 @@ int countDigits( int number ){
 
 void setLoops( struct Path *track, struct Path *path ){
   int len = 0;
-  track->loopsRange.a = 1; track->loopsRange.b = 1;
+  track->loopsRange.a = 1; track->loopsRange.b =   1;
   if( path->len )
-    if( strchr( "?+*{", *path->ptr ))
-      switch( *path->ptr ){
-      case '?' : len = 1; track->loopsRange.a = 0; track->loopsRange.b =   1; break;
-      case '+' : len = 1; track->loopsRange.a = 1; track->loopsRange.b = INF; break;
-      case '*' : len = 1; track->loopsRange.a = 0; track->loopsRange.b = INF; break;
-      case '{' :
-        track->loopsRange.a = atoi( path->ptr + 1 ) ;
-        if( path->ptr[ countDigits( track->loopsRange.a ) + 1 ] == ',' )
-          track->loopsRange.b = atoi( strchr( path->ptr, ',' ) + 1 );
-        else track->loopsRange.b = track->loopsRange.a;
-        len = strchr( path->ptr, '}' ) - path->ptr + 1;
-        break;
-      }
+    switch( *path->ptr ){
+    case '?' : len = 1; track->loopsRange.a = 0; track->loopsRange.b =   1; break;
+    case '+' : len = 1; track->loopsRange.a = 1; track->loopsRange.b = INF; break;
+    case '*' : len = 1; track->loopsRange.a = 0; track->loopsRange.b = INF; break;
+    case '{' :
+      track->loopsRange.a = atoi( path->ptr + 1 ) ;
+      if( path->ptr[ countDigits( track->loopsRange.a ) + 1 ] == ',' )
+        track->loopsRange.b = atoi( strchr( path->ptr, ',' ) + 1 );
+      else track->loopsRange.b = track->loopsRange.a;
+      len = strchr( path->ptr, '}' ) - path->ptr + 1;
+      break;
+    }
 
   path->ptr += len;
   path->len -= len;
@@ -285,6 +276,7 @@ void openCatch( struct Path *track, struct PathLine *pathLine, int *index ){
     *index = Catch.index++;
     Catch.ptr[ *index ] = pathLine->line + pathLine->pos;
     Catch.len[ *index ] = 0;
+    Catch.id [ *index ] = Catch.idx++;
   } else *index = CATCHS;
 }
 
@@ -298,10 +290,11 @@ void delCatch( struct Path *track, int index ){
     Catch.index = index;
     Catch.ptr[ index ] = 0;
     Catch.len[ index ] = 0;
+    Catch.idx = Catch.id[ index ];
   }
 }
 
-int CatchIndex(){
+int indexCatch(){
   return Catch.index - 1;
 }
 
@@ -316,19 +309,18 @@ char * getCatch( char * lineCatch, int index ){
 
 char * replaceCatch( char * newLine, char * str, int index ){
   char *origin = newLine, *line = Catch.ptr[ 0 ];
-  int iCatch = index ? index : 1;
+  strcpy( origin, Catch.ptr[0] );
 
-  if( index >= 0 && index < Catch.index ){
-    while( iCatch < Catch.index ){
-      strncpy( newLine, line, Catch.ptr[ iCatch ] - line );
-      newLine += Catch.ptr[ iCatch ] - line;
-      strcpy( newLine, str );
-      newLine += strlen( str );
-      line =  Catch.ptr[ iCatch ] + Catch.len[ iCatch ];
-      strcpy( newLine, line );
-      iCatch = index ? Catch.index : iCatch + 1;
-    }
-  } else strcpy( origin, Catch.ptr[0] );
+  if( index > 0 && index < Catch.index )
+    for( int iCatch = 1; iCatch < Catch.index; iCatch++ )
+      if( Catch.id[ iCatch ] == index ){
+        strncpy( newLine, line, Catch.ptr[ iCatch ] - line );
+        newLine += Catch.ptr[ iCatch ] - line;
+        strcpy( newLine, str );
+        newLine += strlen( str );
+        line =  Catch.ptr[ iCatch ] + Catch.len[ iCatch ];
+        strcpy( newLine, line );
+      }
 
   return origin;
 }
@@ -358,9 +350,8 @@ int matchBracket( struct Path *text, struct PathLine *pathLine ){
   if( reverse ){ path.len--; path.ptr++; }
   while( tracker( &path, &track ) ){
     switch( track.type ){
-    case POINT    :
-    case RANGEAB  :
-    case META     : result = match( &track, pathLine ); break;
+    case POINT: case RANGEAB: case META:
+      result = match( &track, pathLine ); break;
     default       :
       result = strnchr( track.ptr, pathLine->line[pathLine->pos], track.len  ) != 0;
       break;
