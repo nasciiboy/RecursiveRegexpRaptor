@@ -107,12 +107,11 @@ int walker( struct Path path, struct PathLine *pathLine ){
 }
 
 int cutTrack( struct Path *path, struct Path *track, int type ){
-  int i, deep, cut;
   track->ptr  = path->ptr + (type == PATH ? 0 : 1);
   track->len  = path->len;
   track->type = path->type;
 
-  for( i = deep = 0; i < path->len; i++ ){
+  for( int cut, i = 0, deep = 0; i < path->len; i++ ){
     i += walkMeta ( path->ptr + i );
     i += walkBracket( path->ptr + i );
 
@@ -142,10 +141,10 @@ int cutTrack( struct Path *path, struct Path *track, int type ){
 
 int trekking( struct Path *path, struct PathLine *pathLine ){
   struct Path track;
-  int npos = 0, loop , len, iCatch;
+  int loop , len, iCatch, opos = pathLine->pos;
 
   while( tracker( path, &track ) ){
-    openCatch( &track, pathLine, &iCatch);
+    openCatch( &track, pathLine, &iCatch );
 
     if( isPath( &track ) )
       for( loop = 0; loop < track.loopsRange.b && walker( track, pathLine ); )
@@ -154,15 +153,14 @@ int trekking( struct Path *path, struct PathLine *pathLine ){
       for( loop = 0; loop < track.loopsRange.b     &&
                      pathLine->pos < pathLine->len && (len = match( &track, pathLine )); ){
         pathLine->pos += len;
-        npos          += len;
         loop++;
       }
 
     if( loop < track.loopsRange.a ){
-      pathLine->pos -= npos;
+      pathLine->pos = opos;
       delCatch( &track, iCatch );
       return FALSE;
-    } else closeCatch( &track, pathLine, iCatch);
+    } else closeCatch( &track, pathLine, iCatch );
   }
 
   return TRUE;
