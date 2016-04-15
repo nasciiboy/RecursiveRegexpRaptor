@@ -147,18 +147,16 @@ int trekking( struct Path *path, struct PathLine *pathLine ){
   while( tracker( path, &track ) ){
     openCatch( &track, pathLine, &iCatch);
 
-    if( isPath( &track ) ){
-      for( loop = 0; loop < track.loopsRange.b && walker( track, pathLine ); ) loop++;
-    } else {
-      len = (track.type == BRACKET || track.type == RANGEAB || track.type == META) ? 1 : track.len;
-
+    if( isPath( &track ) )
+      for( loop = 0; loop < track.loopsRange.b && walker( track, pathLine ); )
+        loop++;
+    else
       for( loop = 0; loop < track.loopsRange.b     &&
-                     pathLine->pos < pathLine->len && match( &track, pathLine ); ){
+                     pathLine->pos < pathLine->len && (len = match( &track, pathLine )); ){
         pathLine->pos += len;
         npos          += len;
         loop++;
       }
-    }
 
     if( loop < track.loopsRange.a ){
       pathLine->pos -= npos;
@@ -233,11 +231,12 @@ int walkBracket( char *str ){
 }
 
 int isPath( struct Path *track ){
-  if( track->type == META || track->type == BRACKET || track->type == RANGEAB ) return FALSE;
-
-  for( int i = 0; i < track->len; i++ )
-    if( strchr( "|(<[?+*{-\\", track->ptr[i] ) )
-      return TRUE;
+  switch( track->type ){
+  case PATH: case HOOK: case GROUP:
+    for( int i = 0; i < track->len; i++ )
+      if( strchr( "|(<[?+*{-\\", track->ptr[i] ) )
+        return TRUE;
+  }
 
   return FALSE;
 }
@@ -311,16 +310,15 @@ char * replaceCatch( char * newLine, char * str, int index ){
   char *origin = newLine, *line = Catch.ptr[ 0 ];
   strcpy( origin, Catch.ptr[0] );
 
-  if( index > 0 && index < Catch.index )
-    for( int iCatch = 1; iCatch < Catch.index; iCatch++ )
-      if( Catch.id[ iCatch ] == index ){
-        strncpy( newLine, line, Catch.ptr[ iCatch ] - line );
-        newLine += Catch.ptr[ iCatch ] - line;
-        strcpy( newLine, str );
-        newLine += strlen( str );
-        line =  Catch.ptr[ iCatch ] + Catch.len[ iCatch ];
-        strcpy( newLine, line );
-      }
+  for( int iCatch = 1; iCatch < Catch.index; iCatch++ )
+    if( Catch.id[ iCatch ] == index ){
+      strncpy( newLine, line, Catch.ptr[ iCatch ] - line );
+      newLine += Catch.ptr[ iCatch ] - line;
+      strcpy( newLine, str );
+      newLine += strlen( str );
+      line =  Catch.ptr[ iCatch ] + Catch.len[ iCatch ];
+      strcpy( newLine, line );
+    }
 
   return origin;
 }
@@ -365,16 +363,16 @@ int matchBracket( struct Path *text, struct PathLine *pathLine ){
 
 int matchMeta( struct Path *text, char *line ){
   switch( text->ptr[1] ){
-  case 'd' : return  isdigit(*line);
-  case 'D' : return !isdigit(*line);
-  case 'w' : return  isalnum(*line);
-  case 'W' : return !isalnum(*line);
-  case 's' : return  isspace(*line);
-  case 'S' : return !isspace(*line);
+  case 'd' : return  isdigit(*line) != 0;
+  case 'D' : return  isdigit(*line) == 0;
+  case 'w' : return  isalnum(*line) != 0;
+  case 'W' : return  isalnum(*line) == 0;
+  case 's' : return  isspace(*line) != 0;
+  case 'S' : return  isspace(*line) == 0;
   default  : return *line == text->ptr[1];
   }
 }
 
 int matchText( struct Path *text, char *line ){
-  return strncmp( line, text->ptr, text->len )  == 0;
+  return strncmp( line, text->ptr, text->len )  == 0 ? text->len : 0;
 }

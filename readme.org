@@ -339,7 +339,7 @@
    - index   :: indice de captura segun el orden de aparicion dentro
                 de la exprecion regular. Pasar un indice incorrecto,
                 coloca una copia sin modificacion de la cadena de
-                busqueda sombre el arreglo =newLine=.
+                busqueda sobre el arreglo =newLine=.
 
 
    en este caso el uso del argumento =index= a diferencia de la
