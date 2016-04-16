@@ -24,10 +24,6 @@ int rtest(){
     errs++;                                     \
   }
 
-  TRUE_TEST( "linea simple", "" );
-  TRUE_TEST( "linea simple", "^" );
-  TRUE_TEST( "linea simple", "|" );
-  TRUE_TEST( "linea simple", "|(|)" );
   TRUE_TEST( "linea simple", "a s" );
   TRUE_TEST( "linea simple", "^linea" );
   TRUE_TEST( "linea simple", "simple$" );
@@ -67,7 +63,11 @@ int rtest(){
   }
 
   FALSE_TEST( "", "" );
+  FALSE_TEST( "linea simple", "" );
+  FALSE_TEST( "linea simple", "^" );
+  FALSE_TEST( "linea simple", "|" );
   FALSE_TEST( "linea simple", "()" );
+  FALSE_TEST( "linea simple", "|(|)" );
   FALSE_TEST( "", "expresion" );
   FALSE_TEST( "linea simple", "e s" );
   FALSE_TEST( "lineo simple", "^linea" );
@@ -102,11 +102,11 @@ int rtest(){
     errs++;                                             \
   }
 
-  NTEST( "linea simple", "^", 1  );
-  NTEST( "linea simple", "", 12 );
-  NTEST( "linea simple", "|", 12 );
+  NTEST( "linea simple", "^", 0  );
+  NTEST( "linea simple", "", 0 );
+  NTEST( "linea simple", "|", 0 );
   NTEST( "linea simple", "()", 0 );
-  NTEST( "linea simple", "|(|)", 12 );
+  NTEST( "linea simple", "|(|)", 0 );
   NTEST( "linea simple", "a s", 1 );
   NTEST( "linea simple", "^linea", 1 );
   NTEST( "linea simple", "simple$", 1 );

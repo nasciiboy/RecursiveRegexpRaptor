@@ -4,10 +4,10 @@
 
 #include "regexp3.h"
 
-#define TRUE      1
-#define FALSE     0
-#define INF    1024
-#define CATCHS   24
+#define TRUE       1
+#define FALSE      0
+#define INF    65536
+#define CATCHS    24
 
 struct CATch {
   char *ptr[CATCHS];
@@ -103,7 +103,7 @@ int walker( struct Path path, struct PathLine *pathLine ){
     if( walker( track,  pathLine ) )
       return TRUE;
 
-  return trekking( &track, pathLine );
+  return track.len ? trekking( &track, pathLine ) : FALSE;
 }
 
 int cutTrack( struct Path *path, struct Path *track, int type ){
@@ -141,7 +141,7 @@ int cutTrack( struct Path *path, struct Path *track, int type ){
 
 int trekking( struct Path *path, struct PathLine *pathLine ){
   struct Path track;
-  int loop , len, iCatch, opos = pathLine->pos;
+  int loop, len, iCatch, opos = pathLine->pos;
 
   while( tracker( path, &track ) ){
     openCatch( &track, pathLine, &iCatch );
@@ -249,7 +249,7 @@ int countDigits( int number ){
 
 void setLoops( struct Path *track, struct Path *path ){
   int len = 0;
-  track->loopsRange.a = 1; track->loopsRange.b =   1;
+  track->loopsRange.a = 1; track->loopsRange.b = 1;
   if( path->len )
     switch( *path->ptr ){
     case '?' : len = 1; track->loopsRange.a = 0; track->loopsRange.b =   1; break;
