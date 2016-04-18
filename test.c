@@ -19,100 +19,185 @@ int rtest(){
 #define TRUE_TEST( str, exp )                   \
   result = regexp3( str, exp );                 \
   total++;                                      \
-  if( !result ){                                \
-    puts( "Error on " str ", " exp );           \
+  if( result == 0 ){                            \
+    puts( "Error on TRUE TEST " str ", " exp ); \
     errs++;                                     \
   }
 
-  TRUE_TEST( "linea simple", "a s" );
-  TRUE_TEST( "linea simple", "^linea" );
-  TRUE_TEST( "linea simple", "simple$" );
-  TRUE_TEST( "linea simple", "^linea simple$" );
-  TRUE_TEST( "Handel", "Handel|Haendel|Dinosaurio" );
-  TRUE_TEST( "Handel", "H[eioau]ndel" );
-  TRUE_TEST( "Handel", "Ha-zndel" );
-  TRUE_TEST( "Handel", "H[1-9a-z]ndel" );
-  TRUE_TEST( "$|)}^", "([$|)}^])+" );
-  TRUE_TEST( "Handel", "H[^eiou]ndel" );
-  TRUE_TEST( "Handel", "H.ndel" );
-  TRUE_TEST( "Hndel", "Ha?ndel" );
-  TRUE_TEST( "Haaandel", "Ha+ndel" );
-  TRUE_TEST( "Handel", "Hae*ndel" );
-  TRUE_TEST( "Haandel", "Ha{1,100}ndel" );
-  TRUE_TEST( "Haandel", "Ha{2}ndel" );
-  TRUE_TEST( "Handel", "H\141ndel" );
-  TRUE_TEST( "Handel", "H\x61ndel" );
-  TRUE_TEST( "Handel", "H\x61ndel" );
-  TRUE_TEST( "|()<>[]?+*{}-\\", "<\\|\\(\\)\\<\\>\\[\\]\\?\\+\\*\\{\\}\\-\\\\>" );
-  TRUE_TEST( "Haéndel", "Ha\u00E9ndel" );
-  TRUE_TEST( "Handel", "(Handel)" );
-  TRUE_TEST( "▞▞▞▞aaaa1aaa", "((\u259e?){3,100}(\\D)*(\\d?)\\w+)*" );
-  TRUE_TEST( "1999-12-05", "((\\d){2,4}(\\-|/)(\\d)*(\\W{1})(\\d+))" );
-  TRUE_TEST( "<a href=\"https://es.wikipedia.org/wiki/Expresi%C3%B3n_regular\">", "((https?://)([^\"])*)" );
-  TRUE_TEST( "contacto (nasciiboy@gmail.com) $$", "(\\w+@\\w+\\.\\w+)" );
-  TRUE_TEST( "1. rango entre 1985-2014.", "\\D?(\\d{4})\\D?$" );
-  TRUE_TEST( "linea86\nlinea87", "no|41|(di|no|saurio|((s|a|l)+i*ne(a[^\\D]{2}))\n?)+" );
-  TRUE_TEST( "<>|{}()^$", "<\\<\\>\\|\\{\\}\\(\\)\\^\\$>" );
+  TRUE_TEST( "Raptor Test", "Raptor" );
+  TRUE_TEST( "Raptor Test", "Test" );
+  TRUE_TEST( "Raptor Test", "r T" );
+  TRUE_TEST( "Raptor Test", "^Raptor" );
+  TRUE_TEST( "Raptor Test", "Test$" );
+  TRUE_TEST( "Raptor Test", "^Raptor Test$" );
+  TRUE_TEST( "Raptor Test", "Dinosaur|T Rex|Raptor|Triceratops" );
+  TRUE_TEST( "Raptor Test", "Ra-zptor" );
+  TRUE_TEST( "Raptor Test", "R[a-z]ptor" );
+  TRUE_TEST( "Raptor Test", "R[uoiea]ptor" );
+  TRUE_TEST( "Raptor Test", "R[^uoie]ptor" );
+  TRUE_TEST( "Raptor Test", "R[^1-9b-z]ptor" );
+  TRUE_TEST( "Raptor Test", "R.ptor" );
+  TRUE_TEST( "Raptor Test", "Ra?ptor" );
+  TRUE_TEST( "Rptor Test", "Ra?ptor" );
+  TRUE_TEST( "Raptor Test", "Ra+ptor" );
+  TRUE_TEST( "Raaaptor Test", "Ra+ptor" );
+  TRUE_TEST( "Raptor Test", "Ra*ptor" );
+  TRUE_TEST( "Rptor Test", "Ra*ptor" );
+  TRUE_TEST( "Raaaptor Test", "Ra*ptor" );
+  TRUE_TEST( "Raptor Test", "Ra{1}ptor" );
+  TRUE_TEST( "Raaaptor Test", "Ra{0,100}ptor" );
+  TRUE_TEST( "Rptor Test", "Ra{0}ptor" );
+  TRUE_TEST( "Raptor Test", "R\141ptor" );
+  TRUE_TEST( "Raaaptor Test", "R\141{3}ptor" );
+  TRUE_TEST( "Raptor Test", "R\x61ptor" );
+  TRUE_TEST( "Raaaptor Test", "R\x61{3}ptor" );
+  TRUE_TEST( "Ráptor Test", "Ráptor" );
+  // TRUE_TEST( "Rááptor Test", "R.áptor" );
+  // TRUE_TEST( "Rááptor Test", "Rá{2}ptor" );
+  TRUE_TEST( "Rááptor Test", "R(á){2}ptor" );
+  TRUE_TEST( "R△ptor Test", "R\u25B3ptor" );
+  // TRUE_TEST( "R△△ptor Test", "R.\u25B3ptor" );
+  // TRUE_TEST( "R△△ptor Test", "R\u25B3{2}ptor" );
+  TRUE_TEST( "R△△ptor Test", "R(\u25B3){2}ptor" );
+  TRUE_TEST( "Raptor Test", "R\\wptor" );
+  TRUE_TEST( "R.ptor Test", "R\\Wptor" );
+  TRUE_TEST( "Rapt0r Test", "Rapt\\dr" );
+  TRUE_TEST( "Raptor Test", "Rapt\\Dr" );
+  TRUE_TEST( "Raptor Test", "Raptor\\s" );
+  TRUE_TEST( "Rapt0r Test", "Rapt\\Sr" );
+  TRUE_TEST( "Raptor Test", "(Raptor)" );
+  TRUE_TEST( "Raptor Test", "(Test)" );
+  TRUE_TEST( "Raptor Test", "(Test|Raptor)" );
+  TRUE_TEST( "Raptor Test", "<Raptor>" );
+  TRUE_TEST( "Raptor Test", "<Test>" );
+  TRUE_TEST( "Raptor Test", "<Test|Raptor>" );
+  TRUE_TEST( "Raptor Test", "(Ra(p(t(or))))" );
+  TRUE_TEST( "Raptor Test", "(((R)a)p)tor" );
+  TRUE_TEST( "Raptor Test", "Rap((t(o)r))" );
+  TRUE_TEST( "Raptor Test", "(((R)a)p)(t((o)r))" );
+  TRUE_TEST( "Raptor Test", "((((R)a)p)(t((o)r)))" );
+  TRUE_TEST( "Raptor Test", "<Ra<p<t<or>>>>" );
+  TRUE_TEST( "Raptor Test", "<<<R>a>p>tor" );
+  TRUE_TEST( "Raptor Test", "Rap<<t<o>r>>" );
+  TRUE_TEST( "Raptor Test", "<<<R>a>p><t<<o>r>>" );
+  TRUE_TEST( "Raptor Test", "<<<<R>a>p><t<<o>r>>>" );
 
-#define FALSE_TEST( str, exp )                  \
-  result = regexp3( str, exp );                 \
-  total++;                                      \
-  if( result ){                                 \
-    puts( "Error on " str ", " exp );           \
-    errs++;                                     \
-  }
+  TRUE_TEST( "$|)}^", "[$|)}^]{5}" );
+  TRUE_TEST( "|()<>[]?+*{}-\\", "\\|\\(\\)\\<\\>\\[\\]\\?\\+\\*\\{\\}\\-\\\\" );
+  TRUE_TEST( "Raptor Test", "\\R\\a\\p\\t\\o\\r\\ \\T\\es\\t" );
 
-  FALSE_TEST( "", "" );
-  FALSE_TEST( "linea simple", "" );
-  FALSE_TEST( "linea simple", "^" );
-  FALSE_TEST( "linea simple", "|" );
-  FALSE_TEST( "linea simple", "()" );
-  FALSE_TEST( "linea simple", "|(|)" );
-  FALSE_TEST( "", "expresion" );
-  FALSE_TEST( "linea simple", "e s" );
-  FALSE_TEST( "lineo simple", "^linea" );
-  FALSE_TEST( "linea simple.", "simple$" );
-  FALSE_TEST( "linea simple.", "^linea simple$" );
-  FALSE_TEST( "Mandel", "Handel|Haendel|Dinosaurio" );
-  FALSE_TEST( "H1ndel", "H[eioau]ndel" );
-  FALSE_TEST( "HAndel", "Ha-zndel" );
-  FALSE_TEST( "HAndel", "H[1-9a-z]ndel" );
-  FALSE_TEST( "Hendel", "H[^eiou]ndel" );
-  FALSE_TEST( "Heandel", "H.ndel" );
-  FALSE_TEST( "Heandel", "Ha?ndel" );
-  FALSE_TEST( "Heendel", "Ha+ndel" );
-  FALSE_TEST( "Hendel", "Hae*ndel" );
-  FALSE_TEST( "Heendel", "Ha{1,100}ndel" );
-  FALSE_TEST( "Handel", "Ha{2}ndel" );
-  FALSE_TEST( "Hendel", "(Handel)" );
-  FALSE_TEST( "Hendel", "Hae*ndel" );
-  FALSE_TEST( "a", "((\u259e){3,100}(\\D)*(\\d?)\\w+)" );
-  FALSE_TEST( "1999-12-", "((\\d){2,4}(\\-|/)(\\d)*(\\W{1})(\\d+))" );
-  FALSE_TEST( "<a href=\"httpse//es.wikipedia.org/wiki/Expresi%C3%B3n_regular\">", "((https?://)([^\"])*)" );
-  FALSE_TEST( "contacto (nasciiboy.gmail.com) $$", "(\\w+@\\w+\\.\\w+)" );
-  FALSE_TEST( "1. rango entre 198-014.", "\\D?(\\d{4})\\D?$" );
-  FALSE_TEST( "linea8\nlinea8", "no|41|(di|no|saurio|((s|a|l)+i*ne(a[^\\D]{2}))\n?)+" );
+  TRUE_TEST( "Raptor Test",     "^<((C|R)ap C|C|R)(a+p{1}tor)\\s?((\\Se)(st))>$" );
+  TRUE_TEST( "CaptorTest",       "<((C|R)ap C|C|R)(a+p{1}tor)\\s?((\\Se)(st))>$" );
+  TRUE_TEST( "Cap CaptorTest",  "^<((C|R)ap C|C|R)(a+p{1}tor)\\s?((\\Se)(st))>" );
+  TRUE_TEST( "Rap Captor Fest",  "<((C|R)ap C|C|R)(a+p{1}tor)\\s?((\\Se)(st))>" );
 
-#define NTEST( str, exp, n )                            \
+  TRUE_TEST( "1999-12-05", "<(\\d){2,4}(\\-|/)(\\d)*(\\W{1})(\\d+)>" );
+  TRUE_TEST( "<a href=\"https://es.wikipedia.org/wiki/Expresi%C3%B3n_regular\">", "(https?://)<[^\"]*>" );
+  TRUE_TEST( "contacto (nasciiboy@gmail.com) $$", "<\\w+@\\w+\\.\\w+>" );
+  TRUE_TEST( "1. rango entre 1985-2014.", "\\D?<\\d{4}>\\D?$" );
+
+
+#define FALSE_TEST( str, exp )                          \
   result = regexp3( str, exp );                         \
   total++;                                              \
-  if( result != n ){                                    \
-    printf( "Error on " str ", " exp " %d\n", n );      \
-    printf( "results %d\n", result );                   \
+  if( result ){                                         \
+    puts( "Error on FALSE TEST " str ", " exp );        \
     errs++;                                             \
   }
 
-  NTEST( "linea simple", "^", 0  );
-  NTEST( "linea simple", "", 0 );
-  NTEST( "linea simple", "|", 0 );
-  NTEST( "linea simple", "()", 0 );
-  NTEST( "linea simple", "|(|)", 0 );
-  NTEST( "linea simple", "a s", 1 );
-  NTEST( "linea simple", "^linea", 1 );
-  NTEST( "linea simple", "simple$", 1 );
-  NTEST( "linea simple", "^linea simple$", 1 );
-  NTEST( "Handel", "Handel|Haendel|Dinosaurio", 1 );
-  NTEST( "Dinosaurio Handel Haendel", "Handel|Haendel|Dinosaurio", 3 );
+  FALSE_TEST( "", "" );
+  FALSE_TEST( "Raptor Test", "" );
+  FALSE_TEST( "Raptor Test", "^" );
+  FALSE_TEST( "Raptor Test", "$" );
+  FALSE_TEST( "Raptor Test", "|" );
+  FALSE_TEST( "Raptor Test", "()" );
+  FALSE_TEST( "Raptor Test", "|(|)" );
+  FALSE_TEST( "", "Raptor Test" );
+  FALSE_TEST( "Raptor Test", "Captor" );
+  FALSE_TEST( "Raptor Test", "Fest" );
+  FALSE_TEST( "Raptor Test", "e T" );
+  FALSE_TEST( "Raptor Test", "^Captor" );
+  FALSE_TEST( "Raptor Test", "Fest$" );
+  FALSE_TEST( "Raptor Test", "^Raptor Test $" );
+  FALSE_TEST( "Raptor Test", "Dinosaur|T Rex|Captor|Triceratops" );
+  FALSE_TEST( "Raptor Test", "Rb-zptor" );
+  FALSE_TEST( "Raptor Test", "R[b-z]ptor" );
+  FALSE_TEST( "Raptor Test", "R[uoiex]ptor" );
+  FALSE_TEST( "Raptor Test", "R[^uoiea]ptor" );
+  FALSE_TEST( "Raptor Test", "R[^1-9a-z]ptor" );
+  FALSE_TEST( "Raptor Test", "Ra.ptor" );
+  FALSE_TEST( "Raptor Test", "Rx?ptor" );
+  FALSE_TEST( "Raptor Test", "Rx+ptor" );
+  FALSE_TEST( "Raaaptor Test", "Rx+ptor" );
+  FALSE_TEST( "Raptor Test", "Rx*ptor" );
+  FALSE_TEST( "Raaaptor Test", "Rx*ptor" );
+  FALSE_TEST( "Raptor Test", "Rx{1}ptor" );
+  FALSE_TEST( "Raaaptor Test", "Rx{0,100}ptor" );
+  FALSE_TEST( "R4ptor Test", "R\141ptor" );
+  FALSE_TEST( "R123ptor Test", "R\141{3}ptor" );
+  FALSE_TEST( "R4ptor Test", "R\x61ptor" );
+  FALSE_TEST( "R123ptor Test", "R\x61{3}ptor" );
+  FALSE_TEST( "R4ptor Test", "Ráptor" );
+  FALSE_TEST( "R44ptor Test", "R(á){2}ptor" );
+  FALSE_TEST( "R4ptor Test", "R\u25B3ptor" );
+  FALSE_TEST( "R44ptor Test", "R(\u25B3){2}ptor" );
+  FALSE_TEST( "R^ptor Test", "R\\wptor" );
+  FALSE_TEST( "Raptor Test", "R\\Wptor" );
+  FALSE_TEST( "Raptor Test", "Rapt\\dr" );
+  FALSE_TEST( "Rapt0r Test", "Rapt\\Dr" );
+  FALSE_TEST( "Raptor_Test", "Raptor\\s" );
+  FALSE_TEST( "Rapt r Test", "Rapt\\Sr" );
+  FALSE_TEST( "Raptor Test", "(Captor)" );
+  FALSE_TEST( "Raptor Test", "(Fest)" );
+  FALSE_TEST( "Raptor Test", "(Fest|Captor)" );
+  FALSE_TEST( "Raptor Test", "<Captor>" );
+  FALSE_TEST( "Raptor Test", "<Fest>" );
+  FALSE_TEST( "Raptor Test", "<Fest|Captor>" );
+  FALSE_TEST( "Raptor Test", "(Ra(p(t(0r))))" );
+  FALSE_TEST( "Raptor Test", "(((R)a)p)t0r" );
+  FALSE_TEST( "Raptor Test", "Rap((t(0)r))" );
+  FALSE_TEST( "Raptor Test", "(((R)a)p)(t((0)r))" );
+  FALSE_TEST( "Raptor Test", "((((R)a)p)(t((0)r)))" );
+  FALSE_TEST( "Raptor Test", "<Ra<p<t<0r>>>>" );
+  FALSE_TEST( "Raptor Test", "<<<R>a>p>t0r" );
+  FALSE_TEST( "Raptor Test", "Rap<<t<0>r>>" );
+  FALSE_TEST( "Raptor Test", "<<<R>a>p><t<<0>r>>" );
+  FALSE_TEST( "Raptor Test", "<<<<R>a>p><t<<0>r>>>" );
+
+  FALSE_TEST( "4|)}^", "[$|)}^]{5}" );
+  FALSE_TEST( "|()<>[]?+*{}4\\", "\\|\\(\\)\\<\\>\\[\\]\\?\\+\\*\\{\\}\\-\\\\" );
+  FALSE_TEST( "Raptor Fest", "\\R\\a\\p\\t\\o\\r\\ \\T\\es\\t" );
+
+  FALSE_TEST( "Raptor Tes4",     "^<((C|R)ap C|C|R)(a+p{1}tor)\\s?((\\Se)(st))>$" );
+  FALSE_TEST( "CaptorTes4",       "<((C|R)ap C|C|R)(a+p{1}tor)\\s?((\\Se)(st))>$" );
+  FALSE_TEST( "Cap CaptorTes4",  "^<((C|R)ap C|C|R)(a+p{1}tor)\\s?((\\Se)(st))>" );
+  FALSE_TEST( "Rap Captor Fes4",  "<((C|R)ap C|C|R)(a+p{1}tor)\\s?((\\Se)(st))>" );
+
+  FALSE_TEST( "1999+12-05", "<(\\d){2,4}(\\-|/)(\\d)*(\\W{1})(\\d+)>" );
+  FALSE_TEST( "<a href=\"https@//es.wikipedia.org/wiki/Expresi%C3%B3n_regular\">", "(https?://)<[^\"]*>" );
+  FALSE_TEST( "contacto (nasciiboy^gmail.com) $$", "<\\w+@\\w+\\.\\w+>" );
+  FALSE_TEST( "1. rango entre 1985-201A.", "\\D?(\\d{4})\\D?$" );
+
+#define NTEST( str, exp, n )                                    \
+  result = regexp3( str, exp );                                 \
+  total++;                                                      \
+  if( result != n ){                                            \
+    printf( "Error on NTEST " str ", " exp " %d\n", n );        \
+    printf( "results %d\n", result );                           \
+    errs++;                                                     \
+  }
+
+  NTEST( "Raptor Test", "^", 0  );
+  NTEST( "Raptor Test", "", 0 );
+  NTEST( "Raptor Test", "|", 0 );
+  NTEST( "Raptor Test", "()", 0 );
+  NTEST( "Raptor Test", "|(|)", 0 );
+  NTEST( "Raptor Test", "r T", 1 );
+  NTEST( "Raptor Test", "^Raptor", 1 );
+  NTEST( "Raptor Test", "Test$", 1 );
+  NTEST( "Raptor Test", "^Raptor Test", 1 );
+  NTEST( "Raptor Test", "Raptor|Test |Dinosaur", 1 );
+  NTEST( "Raptor Test Fest", "Raptor|Test|Fest", 3 );
   NTEST( "1a2a3a4a5a6a", "a", 6 );
   NTEST( "1a2a3a4a5a6a", "1-6a", 6 );
   NTEST( "1a2a3a4a5a6a", "1-3a", 3 );
@@ -131,34 +216,31 @@ int rtest(){
   NTEST( "ae ai au aw aa", "(i a|u a)*", 14 );
   NTEST( "ae ai au aw aa", "(i a(u a)+)*", 14 );
   NTEST( "ae ai au aw aa", "(i a(u a)+)+", 1 );
-  NTEST( "linea multi anidamiento", "(linea (multi anidamiento))", 1 );
-  NTEST( "linea multi opcion", "(linea|multi|opcion)", 3 );
-  NTEST( "linea multi opcion", "linea (multi|opcion)", 1 );
-  NTEST( "multi multiple multiples", "<multi(\\w+)?> ?", 3 );
+  NTEST( "Raptor Test Fest", "(Raptor (Test (Fest)))", 1 );
+  NTEST( "Raptor Test Fest", "(((Raptor) Test) Fest)", 1 );
+  NTEST( "Raptor Raptors Raptoring", "(Raptor(\\w+)?) ?", 3 );
 
   char line[1024];
 #define CATCH_AND_REPLACE_TEST( str, exp, n, rstr, cstr )       \
   result = regexp3( str, exp );                                 \
   total++;                                                      \
   if( strcmp( replaceCatch( line, rstr, n ), cstr ) != 0 ){     \
-    printf( "Error on " rstr ", " cstr "\n" );                  \
+    printf( "Error on " str ", " exp "\n" );                    \
     printf( "result    >>%s<<\n"                                \
             "expected  >>%s<<\n", line, cstr );                 \
     errs++;                                                     \
   }
 
-  CATCH_AND_REPLACE_TEST( "linea simple", "<linea>", 1, "dog", "dog simple"   );
-  CATCH_AND_REPLACE_TEST( "linea simple", "<linea>", 0, "dog", "linea simple"   );
-  CATCH_AND_REPLACE_TEST( "linea simple", "<linea|simple>", 0, "dog", "linea simple"   );
-  CATCH_AND_REPLACE_TEST( "linea simple", "<linea|simple>", 1, "dog", "dog dog"   );
-  CATCH_AND_REPLACE_TEST( "linea simple", "<linea|simple>", 2, "dog", "linea simple"   );
-  CATCH_AND_REPLACE_TEST( "linea lineass lineashh", "<linea\\w*>", 1, "dog", "dog dog dog" );
-  CATCH_AND_REPLACE_TEST( "linea lineass lineashh", "<linea(\\w*|raptor)>", 1, "dog", "dog dog dog" );
-  CATCH_AND_REPLACE_TEST( "1988 1699 2085", "^<19<[\\d]{2}>>( (1699|2085))", 1, "raptor", "raptor 1699 2085" );
-  CATCH_AND_REPLACE_TEST( "1988 1699 2085", "^<19<[\\d]{2}>>( (1699|2085))", 2, "raptor", "19raptor 1699 2085" );
-  CATCH_AND_REPLACE_TEST( "1988 1699 2085", "^<19<[\\d]{2}>>( 1699 2085))$", 2, "raptor", "19raptor 1699 2085" );
-  CATCH_AND_REPLACE_TEST( "1988 1699 2085 1988 1699 2085 1988 1699 2085", "<19<[\\d]{2}>>( 1699 2085))$", 1, "raptor", "raptor 1699 2085 raptor 1699 2085 raptor 1699 2085" );
-  CATCH_AND_REPLACE_TEST( "1988 1699 2085 1988 1699 2085 1988 1699 2085", "<19<[\\d]{2}>>( 1699 2085))$", 2, "raptor", "19raptor 1699 2085 19raptor 1699 2085 19raptor 1699 2085" );
+  CATCH_AND_REPLACE_TEST( "Raptor Test", "<Raptor>", 1, "Captor", "Captor Test"   );
+  CATCH_AND_REPLACE_TEST( "Raptor Test", "<Raptor>", 0, "Captor", "Raptor Test"   );
+  CATCH_AND_REPLACE_TEST( "Raptor Test", "<Raptor|Test>", 0, "Captor", "Raptor Test"   );
+  CATCH_AND_REPLACE_TEST( "Raptor Test", "<Raptor|Test>", 1, "Captor", "Captor Captor"   );
+  CATCH_AND_REPLACE_TEST( "Raptor Test", "<Raptor|Test>", 2, "Captor", "Raptor Test"   );
+  CATCH_AND_REPLACE_TEST( "Raptor Test", "<Raptor|<Test>>", 2, "Fest", "Raptor Fest"   );
+  CATCH_AND_REPLACE_TEST( "Raptor Raptors Raptoring", "<Raptor\\w*>", 1, "Test", "Test Test Test" );
+  CATCH_AND_REPLACE_TEST( "Raptor Raptors Raptoring", "<Raptor>\\w*", 1, "Test", "Test Tests Testing" );
+  CATCH_AND_REPLACE_TEST( "Raptor Raptors Raptoring", "<<<R>a>ptor>\\w*", 3, "C", "Captor Captors Captoring" );
+  CATCH_AND_REPLACE_TEST( "Raptor Raptors Raptoring", "<<<R>a>ptor>\\w*", 2, "4", "4ptor 4ptors 4ptoring" );
 
 
   printf( "TEST %d *** ERRS %d\n\n", total, errs );

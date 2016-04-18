@@ -17,8 +17,10 @@ struct CATch {
   int   index;
 } Catch;
 
-struct LoopsRange {
-  int a, b;
+struct PathLine {
+  char *line;
+  int   pos;
+  int   len;
 };
 
 enum PTYPE { PATH, HOOK, GROUP, SIMPLE, BRACKET, RANGEAB, META, POINT };
@@ -26,14 +28,8 @@ enum PTYPE { PATH, HOOK, GROUP, SIMPLE, BRACKET, RANGEAB, META, POINT };
 struct Path {
   int   len;
   char *ptr;
-  enum   PTYPE type;
-  struct LoopsRange loopsRange;
-};
-
-struct PathLine {
-  char *line;
-  int   pos;
-  int   len;
+  enum  PTYPE type;
+  int   loopsMin, loopsMax;
 };
 
 int   walker      ( struct Path   path,   struct PathLine *pathLine              );
@@ -58,15 +54,15 @@ int   matchText   ( struct Path *text,           char     *line                 
 int regexp3( char *line, char *exp ){
   struct Path     path;
   struct PathLine pathLine;
-  int atTheEnd  = FALSE;
-  int result    = 0;
-  int loops     = strlen( line );
-  path.ptr      = exp;
-  path.len      = strlen( exp );
-  path.type     = PATH;
-  Catch.index   = 1;
-  Catch.ptr[0]  = line;
-  Catch.len[0]  = loops;
+  int atTheEnd    = FALSE;
+  int result      = 0;
+  int loops       = strlen( line );
+  path.ptr        = exp;
+  path.len        = strlen( exp );
+  path.type       = PATH;
+  Catch.index     = 1;
+  Catch.ptr[0]    = line;
+  Catch.len[0]    = loops;
 
   if( *(exp + path.len - 1) == '$' ){
     path.len--;
@@ -141,22 +137,22 @@ int cutTrack( struct Path *path, struct Path *track, int type ){
 
 int trekking( struct Path *path, struct PathLine *pathLine ){
   struct Path track;
-  int loop, len, iCatch, opos = pathLine->pos;
+  int loops, len, iCatch, opos = pathLine->pos;
 
   while( tracker( path, &track ) ){
     openCatch( &track, pathLine, &iCatch );
 
     if( isPath( &track ) )
-      for( loop = 0; loop < track.loopsRange.b && walker( track, pathLine ); )
-        loop++;
+      for( loops = 0; loops < track.loopsMax && walker( track, pathLine ); )
+        loops++;
     else
-      for( loop = 0; loop < track.loopsRange.b     &&
-                     pathLine->pos < pathLine->len && (len = match( &track, pathLine )); ){
+      for( loops = 0; loops < track.loopsMax && pathLine->pos < pathLine->len
+                                             && (len = match( &track, pathLine )); ){
         pathLine->pos += len;
-        loop++;
+        loops++;
       }
 
-    if( loop < track.loopsRange.a ){
+    if( loops < track.loopsMin ){
       pathLine->pos = opos;
       delCatch( &track, iCatch );
       return FALSE;
@@ -240,26 +236,27 @@ int isPath( struct Path *track ){
 }
 
 int countDigits( int number ){
-  int i;
-  for( i = 0; number; i++ )
-    number /= 10;
+  int i = 1;
+  while( number /= 10 ) i++;
 
   return i;
 }
 
 void setLoops( struct Path *track, struct Path *path ){
   int len = 0;
-  track->loopsRange.a = 1; track->loopsRange.b = 1;
+  track->loopsMin = 1; track->loopsMax = 1;
   if( path->len )
     switch( *path->ptr ){
-    case '?' : len = 1; track->loopsRange.a = 0; track->loopsRange.b =   1; break;
-    case '+' : len = 1; track->loopsRange.a = 1; track->loopsRange.b = INF; break;
-    case '*' : len = 1; track->loopsRange.a = 0; track->loopsRange.b = INF; break;
+    case '?' : len = 1; track->loopsMin = 0; track->loopsMax =   1; break;
+    case '+' : len = 1; track->loopsMin = 1; track->loopsMax = INF; break;
+    case '*' : len = 1; track->loopsMin = 0; track->loopsMax = INF; break;
     case '{' :
-      track->loopsRange.a = atoi( path->ptr + 1 ) ;
-      if( path->ptr[ countDigits( track->loopsRange.a ) + 1 ] == ',' )
-        track->loopsRange.b = atoi( strchr( path->ptr, ',' ) + 1 );
-      else track->loopsRange.b = track->loopsRange.a;
+      track->loopsMin = atoi( path->ptr + 1 ) ;
+      if( path->ptr[ 1 + countDigits( track->loopsMin ) ] == ',' )
+        track->loopsMax = atoi( strchr( path->ptr, ',' ) + 1 );
+      else
+        track->loopsMax = track->loopsMin;
+
       len = strchr( path->ptr, '}' ) - path->ptr + 1;
       break;
     }
@@ -291,9 +288,7 @@ void delCatch( struct Path *track, int index ){
   }
 }
 
-int indexCatch(){
-  return Catch.index - 1;
-}
+int indexCatch(){ return Catch.index - 1;}
 
 char * getCatch( char * lineCatch, int index ){
   if( index > 0 && index < Catch.index ){

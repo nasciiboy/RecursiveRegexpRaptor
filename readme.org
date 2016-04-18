@@ -84,25 +84,25 @@
   - busqueda de texto /simple/ en cualquier lugar de una linea:
 
     #+BEGIN_SRC c
-      regexp3( "linea simple", "a s" );
+      regexp3( "Raptor Test", "Raptor" );
     #+END_SRC
 
   - busqueda posicional al inicio '^exp'
 
     #+BEGIN_SRC c
-      regexp3( "linea simple", "^linea" );
+      regexp3( "Raptor Test", "^Raptor" );
     #+END_SRC
 
   - busqueda posicional al final 'exp$'
 
     #+BEGIN_SRC c
-      regexp3( "linea simple", "simple$" );
+      regexp3( "Raptor Test", "Test$" );
     #+END_SRC
 
   - busqueda posicional al inicio y final "^exp$"
 
     #+BEGIN_SRC c
-      regexp3( "linea simple", "^linea simple$" );
+      regexp3( "Raptor Test", "^Raptor Test$" );
     #+END_SRC
 
     - NOTA :: Los caracteres de busqueda posicional solo tienen efecto
@@ -116,13 +116,13 @@
   - opciones de busqueda multiples "exp1|exp2"
 
     #+BEGIN_SRC c
-      regexp3( "Handel", "Handel|Haendel|Dinosaurio" );
+      regexp3( "Raptor Test", "Dinosaur|T Rex|Raptor|Triceratops" );
     #+END_SRC
 
   - Rango de caracteres "x-n"
 
     #+BEGIN_SRC c
-      regexp3( "Handel", "Ha-zndel" );
+      regexp3( "Raptor Test", "Ra-zptor" );
     #+END_SRC
 
     - NOTA :: Los rangos de caracteres pueden colocarse dentro de
@@ -132,7 +132,7 @@
   - Conjunto de caracteres "[abc]"
 
     #+BEGIN_SRC c
-      regexp3( "Handel", "H[eioau]ndel" );
+      regexp3( "Raptor Test", "R[uoiea]ptor" );
     #+END_SRC
 
     - NOTA :: Dentro de un conjunto de caracteres los siguientes
@@ -148,84 +148,87 @@
   - Rango(s) dentro de conjunto de caracteres "[x-n]"
 
     #+BEGIN_SRC c
-      regexp3( "Handel", "H[1-9a-z]ndel" );
+      regexp3( "Raptor Test", "R[a-z]ptor" );
     #+END_SRC
 
   - inversion de conjunto de caracteres  "[^abc]"
 
     #+BEGIN_SRC c
-      regexp3( "Handel", "H[^eiou]ndel" );
+      regexp3( "Raptor Test", "R[^uoie]ptor" );
     #+END_SRC
 
   - coincidencia con cualquier caracter '.'
 
     #+BEGIN_SRC c
-      regexp3( "Handel", "H.ndel" );
+      regexp3( "Raptor Test", "R.ptor" );
     #+END_SRC
 
   - coincidencia cero o una ves '?'
 
     #+BEGIN_SRC c
-      regexp3( "Hndel", "Ha?ndel" );
+      regexp3( "Raptor Test", "Ra?ptor" );
     #+END_SRC
 
   - coincidencia una o mas veces '+'
 
     #+BEGIN_SRC c
-      regexp3( "Haaandel", "Ha+ndel" );
+      regexp3( "Raaaptor Test", "Ra+ptor" );
     #+END_SRC
 
   - coincidencia cero o mas veces '*'
 
     #+BEGIN_SRC c
-      regexp3( "Handel", "Hae*ndel" );
+      regexp3( "Raaaptor Test", "Ra*ptor" );
     #+END_SRC
 
-  - rango de coincidencias '{n1,n2}'
+  - rango de coincidencias "{n1,n2}"
 
     #+BEGIN_SRC c
-      regexp3( "Haandel", "Ha{1,100}ndel" );
+      regexp3( "Raaaptor Test", "Ra{0,100}ptor" );
     #+END_SRC
 
   - numero de coincidencia especifico '{n1}'
 
     #+BEGIN_SRC c
-      regexp3( "Haandel", "Ha{2}ndel" );
+      regexp3( "Raptor Test", "Ra{1}ptor" );
     #+END_SRC
 
   - caracter ascii en notacion octal "\ooo"
 
     #+BEGIN_SRC c
-      regexp3( "Handel", "H\141andel" );
+      regexp3( "Raptor Test", "R\141ptor" );
     #+END_SRC
 
   - caracter ascii en notacion hexadecimal "\xhh"
 
     #+BEGIN_SRC c
-      regexp3( "Handel", "H\x61andel" );
+      regexp3( "Raptor Test", "R\x61ptor" );
     #+END_SRC
 
   - caracter unicode "\uhhhh"
 
     #+BEGIN_SRC c
-      regexp3( "Haéndel", "Ha\u00E9ndel" );
+      regexp3( "R△ptor Test", "R\u25B3ptor" );
     #+END_SRC
 
-    - NOTA :: Aparentemente en entornos *nix, el manejo de caracteres
-              unicode no requiere consideraciones extra, a diferencia
-              de otros sistemas operativos para aficionados donde se
-              requiere utilizar =wmain=, =wchar=, =wprintf=,
-              =w*$$@&!=... en caso de utilizar un sistema con dicha
-              "caracteristica", es recomendable erradicar cualquier
-              rastro del SO en cuestion y recorrer el verdadero camino
-              del programador, prueba a con Debian GNU/linux o algun
-              BSD.
+    - NOTA :: Por el momento (...o no) la libreria no ofrese un
+              soporte adecuado para carateres unicode/utf, por ejemplo
+              al comparar un caracer multibyte =n= veces, *solo* se
+              tomara en cuenta el byte final del caracter, si desea
+              comparar un caracter unicode/utf8 por repeticion
+              "agrupe" dicho caracter como "(caracter)" o "<caracter>"
+              y a continuacion agregue el indicador de repeticion '?',
+              '+', '*', "{n}" o "{n,n}"
 
-    - NOTA :: La forma de procesar caracteres unicode o con notacion
-              hexadecimal es misteriosa y se desconocen los metodos
-              automagicos internos sobre como maneja el compilador
-              dicha notacion, sea precavido al utilizar caracteres mas
-              alla del simple y buen ascii.
+              #+BEGIN_EXAMPLE
+                "(carater)INDICADOR_DE_REP"
+                "(△)+"
+                "(△)*"
+              #+END_EXAMPLE
+
+              el fallo ocurre igualmente con '.', y demas caracteres
+              especiales. En dichos casos no hay una manera de palear
+              el error.
 
 
   - escape de caracter con significado especial "\\c"
@@ -237,23 +240,29 @@
     infinitos al igual que errores por violacion de segmento.
 
     anteceder cualquier caracter (excluyendo cadenas de escape propias
-    de C) con doble diagonal =\=, elimina el significado especial y
-    permite buscar tal cual el caracter.
+    de C) con doble diagonal =\=, elimina (de tener) el significado
+    especial y permite buscar tal cual el caracter.
 
     #+BEGIN_SRC c
       regexp3( "|()<>[]?+*{}-\\", "<\\|\\(\\)\\<\\>\\[\\]\\?\\+\\*\\{\\}\\-\\\\>" );
     #+END_SRC
 
+    o
+
+    #+BEGIN_SRC c
+      regexp3( "Raptor Test", "\\R\\a\\p\\t\\o\\r\\ \\T\\es\\t" );
+    #+END_SRC
+
   - agrupacion "(exp)"
 
     #+BEGIN_SRC c
-      regexp3( "Handel", "(Handel)" );
+      regexp3( "Raptor Test", "(Raptor)" );
     #+END_SRC
 
   - agrupacion con captura "<exp>"
 
     #+BEGIN_SRC c
-      regexp3( "Handel", "<Handel>" );
+      regexp3( "Raptor Test", "<Raptor>" );
     #+END_SRC
 
 ** Recuperacion de captura
@@ -435,51 +444,44 @@
 ** ejemplos interesantes de busqueda
 
    #+BEGIN_SRC c
-      regexp3( "▞▞▞▞aaaa1aaa", "((\u259e?){3,100}(\\D)*(\\d?)\\w+)*" );
+     regexp3( "Raptor Test", "^<((C|R)ap C|C|R)(a+p{1}tor)\\s?((\\Se)(st))>$" );
    #+END_SRC
 
-   busqueda y captura de tres o mas caracteres unicode '▞' que pueden
-   estar o no presentes, seguido por cero o mas caracteres que no son
-   numero, seguido por uno o ningun digito, seguido por uno a mas
-   caracteres, todo buscado cero o mas veces
+   Busqueda y captura de las posibles cadenas:
+
+   - "Cap Captor Test"
+   - "Rap Captor Test"
+   - "Captor Test"
+   - "Raptor Test"
+   - "Cap CaaptorTest"
+   - "Rap CaaptorTest"
+   - ...
+
 
    #+BEGIN_SRC c
-      regexp3( "1999-12-05", "((\\d){2,4}(\\-|/)(\\d)*(\\W{1})(\\d+))" );
+     regexp3( "1999-12-05", "<(\\d){2,4}(\\-|/)(\\d)*(\\W{1})(\\d+)>" );
    #+END_SRC
 
    captura algo parecido a una fecha (cifras y separadores) separado
    por '-' o '/' y un caracter no alfanumerico
 
    #+BEGIN_SRC c
-      regexp3( "<a href=\"https://es.wikipedia.org/wiki/Expresi%C3%B3n_regular\">", "((https?://)([^\"])*)" );
+      regexp3( "<a href=\"https://es.wikipedia.org/wiki/Expresi%C3%B3n_regular\">", "(https?://)<[^\"]*>" );
    #+END_SRC
 
    capturar algo parecido a un enlace web
 
    #+BEGIN_SRC c
-     regexp3( "contacto (nasciiboy@gmail.com) $$", "(\\w+@\\w+\\.\\w+)" );
+     regexp3( "contacto (nasciiboy@gmail.com) $$", "<\\w+@\\w+\\.\\w+>" );
    #+END_SRC
 
    capturar algo parecido a un correo.
 
    #+BEGIN_SRC c
-      regexp3( "1. rango entre 1985-2014.", "\\D?(\\d{4})\\D?" );
+      regexp3( "1. rango entre 1985-2014.", "\\D?<\\d{4}>\\D?" );
    #+END_SRC
 
-   capturar primer cifra parecida a un año
-
-   #+BEGIN_SRC c
-      regexp3( "1. rango entre 1985-2014.", "\\D?(\\d{4})\\D?$" );
-   #+END_SRC
-
-   captura ultima cifra parecida a un año
-
-   #+BEGIN_SRC c
-      regexp3( "linea86\nlinea87", "no|41|(di|no|saurio|((s|a|l)+i*ne(a[^\\D]{2}))\n?)+" );
-   #+END_SRC
-
-   expresion inecesariamente compleja para capturar "lineaxx" u otras
-   cosas
+   capturar cifras de cuatro digitos.
 
 * Hacking
 
