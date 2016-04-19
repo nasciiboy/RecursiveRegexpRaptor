@@ -4,6 +4,21 @@
 #+STARTUP: showall
 #+OPTIONS: H:5 num:nil html-postamble:nil html-style:nil html-scripts:nil
 
+* Caracteristicas
+
+  - Manejo simple
+
+  - El codigo mas compacto, elegante y con minimas dependencias que
+    alla precenciado nunca antes ninguna libreria regexp humana.
+
+  - El numero de rutas y agrupamientos solo esta limitado a lo que el
+    sistema operativo y el hardware puedan soportar
+
+  - Soporte basico a UTF8 (2-6 bytes)
+
+  - Manejo no explicito de memoria dinamica, es decir no aparece
+    ningun =malloc=, =calloc= o =realloc=
+
 * Introduccion
 
   *Recurseve Regexp Raptor* es una libreria de busqueda, captura y
@@ -211,25 +226,13 @@
       regexp3( "R△ptor Test", "R\u25B3ptor" );
     #+END_SRC
 
-    - NOTA :: Por el momento (...o no) la libreria no ofrese un
-              soporte adecuado para carateres unicode/utf, por ejemplo
-              al comparar un caracer multibyte =n= veces, *solo* se
-              tomara en cuenta el byte final del caracter, si desea
-              comparar un caracter unicode/utf8 por repeticion
-              "agrupe" dicho caracter como "(caracter)" o "<caracter>"
-              y a continuacion agregue el indicador de repeticion '?',
-              '+', '*', "{n}" o "{n,n}"
+    #+BEGIN_SRC c
+      regexp3( "R△△△ptor Test", "R\u25B3{3}ptor" );
+    #+END_SRC
 
-              #+BEGIN_EXAMPLE
-                "(carater)INDICADOR_DE_REP"
-                "(△)+"
-                "(△)*"
-              #+END_EXAMPLE
-
-              el fallo ocurre igualmente con '.', y demas caracteres
-              especiales. En dichos casos no hay una manera de palear
-              el error.
-
+    #+BEGIN_SRC c
+      regexp3( "R△△△ptor Test", "R△{3}ptor" );
+    #+END_SRC
 
   - escape de caracter con significado especial "\\c"
 
@@ -581,10 +584,10 @@
 ** Macros
 
    #+BEGIN_SRC c
-     #define TRUE      1
-     #define FALSE     0
-     #define INF    1024
-     #define CATCHS   24
+     #define TRUE       1
+     #define FALSE      0
+     #define INF    65536
+     #define CATCHS    24
    #+END_SRC
 
    =INF= establece el numero maximo de ciclos de repeticion para cada
@@ -608,17 +611,13 @@
    la busqueda y =len= contiene la longitud de la cadena.
 
    #+BEGIN_SRC c
-     struct LoopsRange {
-       int a, b;
-     };
-
-     enum PTYPE { PATH, HOOK, SIMPLE, BRACKET, RANGEAB, META, POINT };
+     enum PTYPE { PATH, HOOK, SIMPLE, BRACKET, RANGEAB, META, POINT, UTF8 };
 
      struct Path {
        int   len;
        char *ptr;
        enum   PTYPE type;
-       struct LoopsRange loopsRange;
+       int   loopsMin, loopsMax;
      };
    #+END_SRC
 
@@ -638,7 +637,11 @@
    - =RANGEAB= rango de caracteres.
    - =META= metacaracter.
    - =POINT= punto.
+   - =UTF8= caracter multibyte con codificacion UTF8
 
+
+   =loopsMin= y =loopsMax= almacenan el rango de repeticiones,
+   normalmente =1= y =1= respectivamente.
 
    #+BEGIN_SRC c
      struct CATch {

@@ -9,6 +9,8 @@
 #define INF    65536
 #define CATCHS    24
 
+const unsigned char xooooooo = 0x80;
+
 struct CATch {
   char *ptr[CATCHS];
   int   len[CATCHS];
@@ -23,7 +25,7 @@ struct PathLine {
   int   len;
 };
 
-enum PTYPE { PATH, HOOK, GROUP, SIMPLE, BRACKET, RANGEAB, META, POINT };
+enum PTYPE { PATH, HOOK, GROUP, SIMPLE, BRACKET, RANGEAB, META, POINT, UTF8 };
 
 struct Path {
   int   len;
@@ -50,6 +52,7 @@ int   match       ( struct Path *text,    struct PathLine *pathLine             
 int   matchBracket( struct Path *text,    struct PathLine *pathLine              );
 int   matchMeta   ( struct Path *text,           char     *line                  );
 int   matchText   ( struct Path *text,           char     *line                  );
+int   matchPoint  (                       struct PathLine *pathLine              );
 
 int regexp3( char *line, char *exp ){
   struct Path     path;
@@ -170,36 +173,52 @@ void trackByLen( struct Path *path, struct Path *track, int len, int type ){
   path->len   -= len;
 }
 
-char * strnpbrk( char *cs, char *ct, int n ){
+char * trackerPoint( char *cs, char *ct, int n ){
   for( int i = 0; i < n && ct[ i ]; i++ )
-    if( strchr( cs, ct[ i ] ) ) return ct + i;
+    if( strchr( cs, ct[ i ] ) || ct[ i ] & xooooooo ) return ct + i;
 
   return 0;
 }
 
+int utf8meter( char *str ){
+  static unsigned char xxoooooo = 0xC0;
+  unsigned char utfOrNo = *str;
+  int i, j = 1;
+
+  for( i = 0; xooooooo & utfOrNo; i++ ) utfOrNo <<= 1;
+
+  while( (str[ j ] & xxoooooo) == xooooooo ) j++;
+
+  if( j == i && i <= 6 ) return i;
+
+  return 1;
+}
+
 int tracker( struct Path *path, struct Path *track ){
   if( path->len ){
-    char *pchar;
+    char *point;
 
-    switch( *path->ptr ){
-    case '\\': trackByLen( path, track, 2, META    ); break;
-    case '.' : trackByLen( path, track, 1, POINT   ); break;
-    case '(' : cutTrack  ( path, track,    GROUP   ); break;
-    case '<' : cutTrack  ( path, track,    HOOK    ); break;
-    case '[' : cutTrack  ( path, track,    BRACKET ); break;
-    default:
-      if( pchar = strnpbrk( ".[(<\\?+*{-", path->ptr + 1, path->len - 1) ){
-        switch( *pchar ){
-        case '.': case '[': case '(': case '<': case '\\':
-          trackByLen( path, track, pchar - path->ptr, SIMPLE  ); break;
-        case '?': case '+': case '*': case '{': case '-':
-          if( pchar - path->ptr == 1 ){
-            if( *pchar == '-' ) trackByLen( path, track, 3, RANGEAB );
-            else                trackByLen( path, track, 1, SIMPLE  );
-          } else trackByLen( path, track, (pchar - path->ptr) - 1, SIMPLE  );
-        }
-      } else trackByLen( path, track, path->len, SIMPLE  );
-    }
+    if( *path->ptr & xooooooo )
+      trackByLen( path, track, utf8meter( path->ptr ), UTF8 );
+    else
+      switch( *path->ptr ){
+      case '\\': trackByLen( path, track, 2, META    ); break;
+      case '.' : trackByLen( path, track, 1, POINT   ); break;
+      case '(' : cutTrack  ( path, track,    GROUP   ); break;
+      case '<' : cutTrack  ( path, track,    HOOK    ); break;
+      case '[' : cutTrack  ( path, track,    BRACKET ); break;
+      default:
+        if( point = trackerPoint( ".[(<\\?+*{-", path->ptr + 1, path->len - 1) ){
+          switch( *point ){
+          default: trackByLen( path, track, point - path->ptr, SIMPLE  ); break;
+          case '?': case '+': case '*': case '{': case '-':
+            if( point - path->ptr == 1 ){
+              if( *point == '-' ) trackByLen( path, track, 3, RANGEAB );
+              else                trackByLen( path, track, 1, SIMPLE  );
+            } else trackByLen( path, track, (point - path->ptr) - 1, SIMPLE  );
+          }
+        } else trackByLen( path, track, path->len, SIMPLE  );
+      }
 
     setLoops( track, path );
     return TRUE;
@@ -288,7 +307,7 @@ void delCatch( struct Path *track, int index ){
   }
 }
 
-int indexCatch(){ return Catch.index - 1;}
+int indexCatch(){ return Catch.index - 1; }
 
 char * getCatch( char * lineCatch, int index ){
   if( index > 0 && index < Catch.index ){
@@ -318,7 +337,7 @@ char * replaceCatch( char * newLine, char * str, int index ){
 
 int match( struct Path *text, struct PathLine *pathLine ){
   switch( text->type ){
-  case POINT  : return pathLine->line[pathLine->pos] != 0;
+  case POINT  : return matchPoint( pathLine );
   case RANGEAB: return pathLine->line[ pathLine->pos ] >= text->ptr[ 0 ] &&
                        pathLine->line[ pathLine->pos ] <= text->ptr[ 2 ];
   case BRACKET: return matchBracket( text, pathLine );
@@ -348,9 +367,11 @@ int matchBracket( struct Path *text, struct PathLine *pathLine ){
       break;
     }
 
-    if( result ) return reverse ? FALSE : TRUE;
+    if( result ) return reverse ? FALSE : result;
   }
 
+  if( pathLine->line[ pathLine->pos] & xooooooo )
+    return reverse ? utf8meter( pathLine->line + pathLine->pos ) : FALSE;
   return reverse ? TRUE : FALSE;
 }
 
@@ -368,4 +389,11 @@ int matchMeta( struct Path *text, char *line ){
 
 int matchText( struct Path *text, char *line ){
   return strncmp( line, text->ptr, text->len )  == 0 ? text->len : 0;
+}
+
+int matchPoint( struct PathLine *pathLine ){
+  if( pathLine->line[pathLine->pos] & xooooooo )
+    return utf8meter( pathLine->line + pathLine->pos );
+
+  return pathLine->line[pathLine->pos] != 0;
 }
