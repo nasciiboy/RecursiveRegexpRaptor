@@ -6,18 +6,21 @@
 
 * Caracteristicas
 
-  - Manejo simple
+  - Manejo sencillo,
 
-  - El codigo mas compacto, elegante y con minimas dependencias que
-    alla precenciado nunca antes ninguna libreria regexp humana.
+  - Sin verificacion de errores en la exprecion regular resivida. C no
+    es asi.
 
-  - El numero de rutas y agrupamientos solo esta limitado a lo que el
-    sistema operativo y el hardware puedan soportar
+  - Numero de rutas y agrupamientos limitado solo por la capacidad del
+    sistema/hardware
 
-  - Soporte basico a UTF8 (2-6 bytes)
+  - El codigo mas compacto y claro que alla precenciado nunca antes
+    alguna libreria regexp humana.
 
-  - Manejo no explicito de memoria dinamica, es decir no aparece
-    ningun =malloc=, =calloc= o =realloc=
+  - Soporte UTF8 (2-6 bytes) (experimental)
+
+  - Manejo no explicito de memoria dinamica. No encontrara ningun
+    =malloc=, =calloc=, =free=, ...
 
 * Introduccion
 
@@ -140,9 +143,11 @@
       regexp3( "Raptor Test", "Ra-zptor" );
     #+END_SRC
 
-    - NOTA :: Los rangos de caracteres pueden colocarse dentro de
-              texto simple, una agrupacion o agrupacion con captura y
-              dentro de un Conjunto de caracteres.
+    - NOTA :: Los rangos de caracteres pueden colocarse dentro de una
+              agrupacion, conjunto de caracteres y texto simple.
+
+    - NOTA :: Solo estan soportados rangos de caracteres ASCII
+
 
   - Conjunto de caracteres "[abc]"
 
@@ -226,12 +231,16 @@
       regexp3( "R△ptor Test", "R\u25B3ptor" );
     #+END_SRC
 
-    #+BEGIN_SRC c
-      regexp3( "R△△△ptor Test", "R\u25B3{3}ptor" );
-    #+END_SRC
+    o
 
     #+BEGIN_SRC c
-      regexp3( "R△△△ptor Test", "R△{3}ptor" );
+      regexp3( "R△ptor Test", "R△ptor" );
+    #+END_SRC
+
+    tambien
+
+    #+BEGIN_SRC c
+      regexp3( "R△ptor Test", "R[△]ptor" );
     #+END_SRC
 
   - escape de caracter con significado especial "\\c"

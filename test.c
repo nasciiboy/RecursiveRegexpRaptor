@@ -63,6 +63,10 @@ int rtest(){
   TRUE_TEST( "R△△ptor Test", "R.\u25B3ptor" );
   TRUE_TEST( "R△△ptor Test", "R\u25B3{2}ptor" );
   TRUE_TEST( "R△△ptor Test", "R(\u25B3){2}ptor" );
+  TRUE_TEST( "R▲△ptor Test", "R[△▲]{2}ptor" );
+  TRUE_TEST( "R▲△ptor Test", "R[^ae]{2}ptor" );
+  TRUE_TEST( "R▲△ptor Test", "R.{2}ptor" );
+  TRUE_TEST( "R▲△ptor Test", "R[.]{2}ptor" );
   TRUE_TEST( "Raptor Test", "R\\wptor" );
   TRUE_TEST( "R.ptor Test", "R\\Wptor" );
   TRUE_TEST( "Rapt0r Test", "Rapt\\dr" );
@@ -145,6 +149,17 @@ int rtest(){
   FALSE_TEST( "R44ptor Test", "R(á){2}ptor" );
   FALSE_TEST( "R4ptor Test", "R\u25B3ptor" );
   FALSE_TEST( "R44ptor Test", "R(\u25B3){2}ptor" );
+  FALSE_TEST( "Ráaptor Test", "R.áptor" );
+  FALSE_TEST( "Ráaptor Test", "Rá{2}ptor" );
+  FALSE_TEST( "R△△aptor Test", "R\u25B3{3}ptor" );
+  FALSE_TEST( "R△△▲ptor Test", "R△{3}ptor" );
+  FALSE_TEST( "R△a△ptor Test", "R[^a]{3}ptor" );
+  FALSE_TEST( "R△▲ptor Test", "R.\u25B3ptor" );
+  FALSE_TEST( "R△▲ptor Test", "R\u25B3{2}ptor" );
+  FALSE_TEST( "R▲△ptor Test", "R[^△▲]{2}ptor" );
+  FALSE_TEST( "R▲△ptor Test", "R[ae]{2}ptor" );
+  FALSE_TEST( "R▲△ptor Test", "R.{1}ptor" );
+  FALSE_TEST( "R▲△ptor Test", "R[.]{1}ptor" );
   FALSE_TEST( "R^ptor Test", "R\\wptor" );
   FALSE_TEST( "Raptor Test", "R\\Wptor" );
   FALSE_TEST( "Raptor Test", "Rapt\\dr" );

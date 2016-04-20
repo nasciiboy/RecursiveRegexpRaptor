@@ -52,7 +52,6 @@ int   match       ( struct Path *text,    struct PathLine *pathLine             
 int   matchBracket( struct Path *text,    struct PathLine *pathLine              );
 int   matchMeta   ( struct Path *text,           char     *line                  );
 int   matchText   ( struct Path *text,           char     *line                  );
-int   matchPoint  (                       struct PathLine *pathLine              );
 
 int regexp3( char *line, char *exp ){
   struct Path     path;
@@ -182,16 +181,16 @@ char * trackerPoint( char *cs, char *ct, int n ){
 
 int utf8meter( char *str ){
   static unsigned char xxoooooo = 0xC0;
-  unsigned char utfOrNo = *str;
-  int i, j = 1;
+  unsigned char utfOrNo = *str, i;
 
-  for( i = 0; xooooooo & utfOrNo; i++ ) utfOrNo <<= 1;
+  if( utfOrNo & xooooooo ){
+    for ( i = 1, utfOrNo <<= 1; utfOrNo & xooooooo; i++, utfOrNo <<= 1 )
+      if( (str[ i ] & xxoooooo) != xooooooo ) return 1;
 
-  while( (str[ j ] & xxoooooo) == xooooooo ) j++;
+    if( i >= 2 && i <= 6 ) return i;
+  }
 
-  if( j == i && i <= 6 ) return i;
-
-  return 1;
+  return *str ? 1 : 0;
 }
 
 int tracker( struct Path *path, struct Path *track ){
@@ -337,7 +336,7 @@ char * replaceCatch( char * newLine, char * str, int index ){
 
 int match( struct Path *text, struct PathLine *pathLine ){
   switch( text->type ){
-  case POINT  : return matchPoint( pathLine );
+  case POINT  : return utf8meter( pathLine->line + pathLine->pos );
   case RANGEAB: return pathLine->line[ pathLine->pos ] >= text->ptr[ 0 ] &&
                        pathLine->line[ pathLine->pos ] <= text->ptr[ 2 ];
   case BRACKET: return matchBracket( text, pathLine );
@@ -360,7 +359,7 @@ int matchBracket( struct Path *text, struct PathLine *pathLine ){
   if( reverse ){ path.len--; path.ptr++; }
   while( tracker( &path, &track ) ){
     switch( track.type ){
-    case POINT: case RANGEAB: case META:
+    case POINT: case RANGEAB: case META: case UTF8:
       result = match( &track, pathLine ); break;
     default       :
       result = strnchr( track.ptr, pathLine->line[pathLine->pos], track.len  ) != 0;
@@ -370,9 +369,7 @@ int matchBracket( struct Path *text, struct PathLine *pathLine ){
     if( result ) return reverse ? FALSE : result;
   }
 
-  if( pathLine->line[ pathLine->pos] & xooooooo )
-    return reverse ? utf8meter( pathLine->line + pathLine->pos ) : FALSE;
-  return reverse ? TRUE : FALSE;
+  return reverse ? utf8meter( pathLine->line + pathLine->pos ) : FALSE;
 }
 
 int matchMeta( struct Path *text, char *line ){
@@ -389,11 +386,4 @@ int matchMeta( struct Path *text, char *line ){
 
 int matchText( struct Path *text, char *line ){
   return strncmp( line, text->ptr, text->len )  == 0 ? text->len : 0;
-}
-
-int matchPoint( struct PathLine *pathLine ){
-  if( pathLine->line[pathLine->pos] & xooooooo )
-    return utf8meter( pathLine->line + pathLine->pos );
-
-  return pathLine->line[pathLine->pos] != 0;
 }
