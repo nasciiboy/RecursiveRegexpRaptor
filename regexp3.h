@@ -20,3 +20,4 @@ int    regexp3( char *line, char *exp );
 char * getCatch( char * lineCatch, int index );
 int    indexCatch();
 char * replaceCatch( char * newLine, char * str, int index );
+char * newLineCatch( char * newLine, char * str );

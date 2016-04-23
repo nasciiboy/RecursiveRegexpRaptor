@@ -22,6 +22,12 @@
   - Manejo no explicito de memoria dinamica. No encontrara ningun
     =malloc=, =calloc=, =free=, ...
 
+  - Recuperacion de capturas de forma individual
+
+  - Reemplazo de capturas
+
+  - Creacion de una nueva linea agregando capturas
+
 * Introduccion
 
   *Recurseve Regexp Raptor* es una libreria de busqueda, captura y
@@ -338,6 +344,33 @@
          printf( "#%d# >%s<\n", i, getCatch( lineCatch, i ) );
      }
    #+END_SRC
+
+*** Colocar capturas dentro de una linea
+
+    #+BEGIN_SRC c
+      char * newLineCatch( char * newLine, char * str );
+    #+END_SRC
+
+    el argumento =str= contiene el texto con el cual formar la nueva
+    cadena asi como indicadores de cuales capturas colocar. Colocar
+    texto no requiere ningun eschizo mistico, texto tal cual, por otro
+    lado indicar la captura requiere cocar el signo '\' seguido del
+    numero de captura:
+
+    #+BEGIN_SRC c
+      str = "captura 1 >>\\1<< capturo 2 >>\\2<< captura 747 >>\\747<<";
+    #+END_SRC
+
+    para escapar el caracter '\' dentro de la nueva cadena
+    "\\". Dentro de la cadena del programa tendra que colocar los
+    respectivos escapes del escape es decir:
+
+    #+BEGIN_CENTER
+      cadena = "\\\\Escape\\\\"
+    #+END_CENTER
+
+    =newLine= es la direccion de un arrglo de caracteres del tamaño
+    necesario para almacenar la linea resultante.
 
 ** Reemplazo de captura
 

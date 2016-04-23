@@ -48,6 +48,7 @@ void  delCatch    ( struct Path *track,                               int  index
 int   CatchIndex  (                                                              );
 char *getCatch    (                              char     *lineCatch, int  index );
 char *replaceCatch(        char *newLine,        char     *str,       int  index );
+char *newLineCatch(        char *newLine,        char     *str                   );
 int   match       ( struct Path *text,    struct PathLine *pathLine              );
 int   matchBracket( struct Path *text,    struct PathLine *pathLine              );
 int   matchMeta   ( struct Path *text,           char     *line                  );
@@ -86,9 +87,8 @@ int regexp3( char *line, char *exp ){
     if( atTheEnd ){
       result = walker( path, &pathLine );
 
-      if( result && pathLine.pos != pathLine.len )
-        result = 0;
-      if( result  ) i = loops;
+      if( result && pathLine.pos == pathLine.len ) i = loops;
+      else result = 0;
     } else result += walker( path, &pathLine );
   }
 
@@ -172,9 +172,9 @@ void trackByLen( struct Path *path, struct Path *track, int len, int type ){
   path->len   -= len;
 }
 
-char * trackerPoint( char *cs, char *ct, int n ){
+char * trackerPoint( char *ct, int n ){
   for( int i = 0; i < n && ct[ i ]; i++ )
-    if( strchr( cs, ct[ i ] ) || ct[ i ] & xooooooo ) return ct + i;
+    if( strchr( ".[(<\\?+*{-", ct[ i ] ) || ct[ i ] & xooooooo ) return ct + i;
 
   return 0;
 }
@@ -197,27 +197,25 @@ int tracker( struct Path *path, struct Path *track ){
   if( path->len ){
     char *point;
 
-    if( *path->ptr & xooooooo )
-      trackByLen( path, track, utf8meter( path->ptr ), UTF8 );
-    else
-      switch( *path->ptr ){
-      case '\\': trackByLen( path, track, 2, META    ); break;
-      case '.' : trackByLen( path, track, 1, POINT   ); break;
-      case '(' : cutTrack  ( path, track,    GROUP   ); break;
-      case '<' : cutTrack  ( path, track,    HOOK    ); break;
-      case '[' : cutTrack  ( path, track,    BRACKET ); break;
-      default:
-        if( point = trackerPoint( ".[(<\\?+*{-", path->ptr + 1, path->len - 1) ){
-          switch( *point ){
-          default: trackByLen( path, track, point - path->ptr, SIMPLE  ); break;
-          case '?': case '+': case '*': case '{': case '-':
-            if( point - path->ptr == 1 ){
-              if( *point == '-' ) trackByLen( path, track, 3, RANGEAB );
-              else                trackByLen( path, track, 1, SIMPLE  );
-            } else trackByLen( path, track, (point - path->ptr) - 1, SIMPLE  );
-          }
-        } else trackByLen( path, track, path->len, SIMPLE  );
-      }
+    switch( *path->ptr & xooooooo ? UTF8 : *path->ptr ){
+    case '\\': trackByLen( path, track,                    2, META    ); break;
+    case '.' : trackByLen( path, track,                    1, POINT   ); break;
+    case '(' : cutTrack  ( path, track,                       GROUP   ); break;
+    case '<' : cutTrack  ( path, track,                       HOOK    ); break;
+    case '[' : cutTrack  ( path, track,                       BRACKET ); break;
+    case UTF8: trackByLen( path, track, utf8meter(path->ptr), UTF8    ); break;
+    default:
+      if( point = trackerPoint( path->ptr + 1, path->len - 1) ){
+        switch( *point ){
+        default: trackByLen( path, track, point - path->ptr, SIMPLE  ); break;
+        case '?': case '+': case '*': case '{': case '-':
+          if( point - path->ptr == 1 ){
+            if( *point == '-' ) trackByLen( path, track, 3, RANGEAB );
+            else                trackByLen( path, track, 1, SIMPLE  );
+          } else trackByLen( path, track, (point - path->ptr) - 1, SIMPLE  );
+        }
+      } else trackByLen( path, track, path->len, SIMPLE  );
+    }
 
     setLoops( track, path );
     return TRUE;
@@ -236,8 +234,7 @@ int walkMeta( char *str ){
 int walkBracket( char *str ){
   int i = 0;
   if( *str == '[' )
-    while( str[i] != ']' )
-      i++;
+    while( str[i] != ']' ) i++;
 
   return i;
 }
@@ -261,8 +258,9 @@ int countDigits( int number ){
 }
 
 void setLoops( struct Path *track, struct Path *path ){
-  int len = 0;
   track->loopsMin = 1; track->loopsMax = 1;
+  int len = 0;
+
   if( path->len )
     switch( *path->ptr ){
     case '?' : len = 1; track->loopsMin = 0; track->loopsMax =   1; break;
@@ -276,7 +274,6 @@ void setLoops( struct Path *track, struct Path *path ){
         track->loopsMax = track->loopsMin;
 
       len = strchr( path->ptr, '}' ) - path->ptr + 1;
-      break;
     }
 
   path->ptr += len;
@@ -323,13 +320,36 @@ char * replaceCatch( char * newLine, char * str, int index ){
 
   for( int iCatch = 1; iCatch < Catch.index; iCatch++ )
     if( Catch.id[ iCatch ] == index ){
-      strncpy( newLine, line, Catch.ptr[ iCatch ] - line );
+      strcpy( newLine, line );
       newLine += Catch.ptr[ iCatch ] - line;
       strcpy( newLine, str );
       newLine += strlen( str );
       line =  Catch.ptr[ iCatch ] + Catch.len[ iCatch ];
       strcpy( newLine, line );
     }
+
+  return origin;
+}
+
+char * newLineCatch( char * newLine, char * str ){
+  char index, *pos, *origin = newLine;
+  strcpy( origin, str );
+
+  while( pos = strchr( str, '\\' ) ){
+    if( pos[ 1 ] == '\\' ){
+      newLine += pos + 1 - str;
+      str      = pos + 2;
+    } else {
+      index = atoi( pos + 1 );
+      strcpy( newLine, str );
+      newLine += pos - str;
+      newLine  = getCatch( newLine, index );
+      newLine += strlen( newLine );
+      str      = pos + 1 + countDigits( index );
+    }
+
+    strcpy( newLine, str );
+  }
 
   return origin;
 }
@@ -361,9 +381,8 @@ int matchBracket( struct Path *text, struct PathLine *pathLine ){
     switch( track.type ){
     case POINT: case RANGEAB: case META: case UTF8:
       result = match( &track, pathLine ); break;
-    default       :
+    default:
       result = strnchr( track.ptr, pathLine->line[pathLine->pos], track.len  ) != 0;
-      break;
     }
 
     if( result ) return reverse ? FALSE : result;
@@ -375,11 +394,11 @@ int matchBracket( struct Path *text, struct PathLine *pathLine ){
 int matchMeta( struct Path *text, char *line ){
   switch( text->ptr[1] ){
   case 'd' : return  isdigit(*line) != 0;
-  case 'D' : return  isdigit(*line) == 0;
+  case 'D' : return  isdigit(*line) == 0 ? utf8meter( line ) : FALSE;
   case 'w' : return  isalnum(*line) != 0;
-  case 'W' : return  isalnum(*line) == 0;
+  case 'W' : return  isalnum(*line) == 0 ? utf8meter( line ) : FALSE;
   case 's' : return  isspace(*line) != 0;
-  case 'S' : return  isspace(*line) == 0;
+  case 'S' : return  isspace(*line) == 0 ? utf8meter( line ) : FALSE;
   default  : return *line == text->ptr[1];
   }
 }

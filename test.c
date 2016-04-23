@@ -56,6 +56,9 @@ int rtest(){
   TRUE_TEST( "Rááptor Test", "Rá{2}ptor" );
   TRUE_TEST( "Rááptor Test", "R(á){2}ptor" );
   TRUE_TEST( "R△ptor Test", "R\u25B3ptor" );
+  TRUE_TEST( "R△ptor Test", "R\\Wptor" );
+  TRUE_TEST( "R△ptor Test", "R\\Sptor" );
+  TRUE_TEST( "R△ptor Test", "R\\Dptor" );
   TRUE_TEST( "R△△△ptor Test", "R\u25B3+ptor" );
   TRUE_TEST( "R△△△ptor Test", "R\u25B3{3}ptor" );
   TRUE_TEST( "R△△△ptor Test", "R△{3}ptor" );
@@ -148,6 +151,9 @@ int rtest(){
   FALSE_TEST( "R4ptor Test", "Ráptor" );
   FALSE_TEST( "R44ptor Test", "R(á){2}ptor" );
   FALSE_TEST( "R4ptor Test", "R\u25B3ptor" );
+  FALSE_TEST( "R△ptor Test", "R\\wptor" );
+  FALSE_TEST( "R△ptor Test", "R\\sptor" );
+  FALSE_TEST( "R△ptor Test", "R\\dptor" );
   FALSE_TEST( "R44ptor Test", "R(\u25B3){2}ptor" );
   FALSE_TEST( "Ráaptor Test", "R.áptor" );
   FALSE_TEST( "Ráaptor Test", "Rá{2}ptor" );
@@ -260,6 +266,29 @@ int rtest(){
   CATCH_AND_REPLACE_TEST( "Raptor Raptors Raptoring", "<Raptor>\\w*", 1, "Test", "Test Tests Testing" );
   CATCH_AND_REPLACE_TEST( "Raptor Raptors Raptoring", "<<<R>a>ptor>\\w*", 3, "C", "Captor Captors Captoring" );
   CATCH_AND_REPLACE_TEST( "Raptor Raptors Raptoring", "<<<R>a>ptor>\\w*", 2, "4", "4ptor 4ptors 4ptoring" );
+
+#define NEWLINE_TEST( str, exp, rstr, cstr )                    \
+  result = regexp3( str, exp );                                 \
+  total++;                                                      \
+  if( strcmp( newLineCatch( line, rstr ), cstr ) != 0 ){        \
+    printf( "Error on " str ", " rstr "\n" );                   \
+    printf( "result    >>%s<<\n"                                \
+            "expected  >>%s<<\n", line, cstr );                 \
+    errs++;                                                     \
+  }
+
+  NEWLINE_TEST( "Raptor Test", "<aptor|est>", "C\\1 F\\2", "Captor Fest" );
+  NEWLINE_TEST( "Raptor Test", "<aptor|est>", "C\\5 F\\2", "C Fest" );
+  NEWLINE_TEST( "Raptor Test", "<aptor|est>", "C\\a F\\2", "C Fest" );
+  NEWLINE_TEST( "Raptor Test", "<aptor|est>", "C\\0 F\\2", "C Fest" );
+  NEWLINE_TEST( "Raptor Test", "<aptor|est>", "C\\43 F\\43", "C F" );
+  NEWLINE_TEST( "Raptor Test", "<aptor|est>", "C\\\\43 \\\\F\\43\\\\", "C\\43 \\F\\" );
+  NEWLINE_TEST( "Raptor Test", "<aptor|est>", "C\\\\43 \\\\1\\\\2", "C\\43 \\1\\2" );
+  NEWLINE_TEST( "Raptor Test", "<aptor|est>", "\\\\Raptor \\\\Test", "\\Raptor \\Test" );
+  NEWLINE_TEST( "Raptor Test Fest", "<Raptor> <Test>", "\\1_\\2", "Raptor_Test" );
+  NEWLINE_TEST( "1995-12/65", "<\\d{4}>(\\-|/)<\\d{2}>(\\-|/)<\\d{2}>", "\\1::\\2::\\3", "1995::12::65" );
+  NEWLINE_TEST( "1995-12/65", "<\\d{4}>(\\-|/)<\\d{2}>(\\-|/)<\\d{2}>", "\\1::\\2::\\Raptor", "1995::12::aptor" );
+  NEWLINE_TEST( "make a new Line", "^<[^n]+>", "\\1raptor", "make a raptor" );
 
 
   printf( "TEST %d *** ERRS %d\n\n", total, errs );
