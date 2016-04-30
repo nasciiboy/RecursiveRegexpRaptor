@@ -1,5 +1,4 @@
 #include <string.h>
-#include <stdlib.h>
 #include <ctype.h>
 
 #include "regexp3.h"
@@ -68,8 +67,8 @@ int regexp3( char *line, char *exp ){
   Catch.len[0]    = loops;
 
   if( *(exp + path.len - 1) == '$' ){
-    path.len--;
     atTheEnd = TRUE;
+    path.len--;
   }
 
   if( *exp == '^' ){
@@ -98,10 +97,9 @@ int regexp3( char *line, char *exp ){
 int walker( struct Path path, struct PathLine *pathLine ){
   struct Path track;
   while( cutTrack( &path, &track, PATH ) )
-    if( walker( track,  pathLine ) )
-      return TRUE;
+    if( track.len && trekking( &track, pathLine ) ) return TRUE;
 
-  return track.len ? trekking( &track, pathLine ) : FALSE;
+  return FALSE;
 }
 
 int cutTrack( struct Path *path, struct Path *track, int type ){
@@ -110,7 +108,7 @@ int cutTrack( struct Path *path, struct Path *track, int type ){
   track->type = path->type;
 
   for( int cut, i = 0, deep = 0; i < path->len; i++ ){
-    i += walkMeta ( path->ptr + i );
+    i += walkMeta   ( path->ptr + i );
     i += walkBracket( path->ptr + i );
 
     switch( path->ptr[i] ){
@@ -134,7 +132,10 @@ int cutTrack( struct Path *path, struct Path *track, int type ){
     }
   }
 
-  return FALSE;
+  path->ptr += path->len;
+  path->len = 0;
+
+  return track->len ? TRUE : FALSE;
 }
 
 int trekking( struct Path *path, struct PathLine *pathLine ){
@@ -149,7 +150,7 @@ int trekking( struct Path *path, struct PathLine *pathLine ){
         loops++;
     else
       for( loops = 0; loops < track.loopsMax && pathLine->pos < pathLine->len
-                                             && (len = match( &track, pathLine )); ){
+             && (len = match( &track, pathLine )); ){
         pathLine->pos += len;
         loops++;
       }
@@ -172,8 +173,8 @@ void trackByLen( struct Path *path, struct Path *track, int len, int type ){
   path->len   -= len;
 }
 
-char * trackerPoint( char *ct, int n ){
-  for( int i = 0; i < n && ct[ i ]; i++ )
+char * trackerPoint( char *ct, int len ){
+  for( int i = 0; i < len && ct[ i ]; i++ )
     if( strchr( ".[(<\\?+*{-", ct[ i ] ) || ct[ i ] & xooooooo ) return ct + i;
 
   return 0;
@@ -181,7 +182,7 @@ char * trackerPoint( char *ct, int n ){
 
 int utf8meter( char *str ){
   static unsigned char xxoooooo = 0xC0;
-  unsigned char utfOrNo = *str, i;
+  unsigned char i, utfOrNo = *str;
 
   if( utfOrNo & xooooooo ){
     for ( i = 1, utfOrNo <<= 1; utfOrNo & xooooooo; i++, utfOrNo <<= 1 )
@@ -205,7 +206,7 @@ int tracker( struct Path *path, struct Path *track ){
     case '[' : cutTrack  ( path, track,                       BRACKET ); break;
     case UTF8: trackByLen( path, track, utf8meter(path->ptr), UTF8    ); break;
     default:
-      if( point = trackerPoint( path->ptr + 1, path->len - 1) ){
+      if( (point = trackerPoint( path->ptr + 1, path->len - 1 )) ){
         switch( *point ){
         default: trackByLen( path, track, point - path->ptr, SIMPLE  ); break;
         case '?': case '+': case '*': case '{': case '-':
@@ -245,9 +246,8 @@ int isPath( struct Path *track ){
     for( int i = 0; i < track->len; i++ )
       if( strchr( "|(<[?+*{-\\", track->ptr[i] ) )
         return TRUE;
+  default: return FALSE;
   }
-
-  return FALSE;
 }
 
 int countDigits( int number ){
@@ -255,6 +255,14 @@ int countDigits( int number ){
   while( number /= 10 ) i++;
 
   return i;
+}
+
+int atoi( char *s ){
+  int uNumber = 0;
+  while( isdigit( *s ) )
+    uNumber = 10 * uNumber + ( *s++ - '0' );
+
+  return uNumber;
 }
 
 void setLoops( struct Path *track, struct Path *path ){
@@ -335,7 +343,7 @@ char * newLineCatch( char * newLine, char * str ){
   char index, *pos, *origin = newLine;
   strcpy( origin, str );
 
-  while( pos = strchr( str, '\\' ) ){
+  while( (pos = strchr( str, '\\' )) ){
     if( pos[ 1 ] == '\\' ){
       newLine += pos + 1 - str;
       str      = pos + 2;

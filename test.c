@@ -64,7 +64,6 @@ int rtest(){
   TRUE_TEST( "R△△△ptor Test", "R△{3}ptor" );
   TRUE_TEST( "R△△△ptor Test", "R[^a]{3}ptor" );
   TRUE_TEST( "R△△ptor Test", "R.\u25B3ptor" );
-  TRUE_TEST( "R△△ptor Test", "R\u25B3{2}ptor" );
   TRUE_TEST( "R△△ptor Test", "R(\u25B3){2}ptor" );
   TRUE_TEST( "R▲△ptor Test", "R[△▲]{2}ptor" );
   TRUE_TEST( "R▲△ptor Test", "R[^ae]{2}ptor" );

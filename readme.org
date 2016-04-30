@@ -358,7 +358,7 @@
     numero de captura:
 
     #+BEGIN_SRC c
-      str = "captura 1 >>\\1<< capturo 2 >>\\2<< captura 747 >>\\747<<";
+      str = "captura 1 >>\\1<< captura 2 >>\\2<< captura 747 >>\\747<<";
     #+END_SRC
 
     para escapar el caracter '\' dentro de la nueva cadena
@@ -558,23 +558,20 @@
      disminulle en 1, si encontramas '|' al tener anidamiento 0, hemos
      encontrado una ruta principal.
 
-     =walker= es la funcion que recursivamente optiene las rutas
-     pricipales, pasa cada posible ruta en orden a si misma y la
-     almacena en la variable local =track=, cada nueva y ultima ruta
-     principal no es divible y es enviada a =trekking= (senderista)
-     que debe dividirla en expreciones mas sencillas.
+     la funcion =walker= optiene cada ruta pricipal secuencalmente,
+     para ser enviada a =trekking= (senderista) quien debe reducirla a
+     expreciones aun mas sencillas.
 
      #+BEGIN_EXAMPLE
-       walker 1 # (ruta uno) | ( (ruta dos a | rutad dos b) ) | ruta n
-       walker 2 # (ruta uno)
-       walker 3 #              ( (ruta dos a | rutad dos b) )
-       walker 1 #                                               ruta n
+       inicio   # (ruta uno) | ( (ruta dos a | rutad dos b) ) | ruta n
+       ruta uno # (ruta uno)
+       ruta dos #              ( (ruta dos a | rutad dos b) )
+       ruta n   #                                               ruta n
      #+END_EXAMPLE
 
-  2. Una ruta principal debe descomponerse en senderos o trayectos mas
-     sencillos eliminando niveles de anidamiento y obteniendo nuevas
-     rutas hasta dejar cadenas que puedan compararse caracter a
-     caracter.
+  2. Una ruta principal debe descomponerse en senderos o trayectos,
+     eliminando niveles de anidamiento y obteniendo nuevas rutas hasta
+     dejar cadenas que puedan compararse directamente.
 
      La funcion =trekking= envia lo que internamente considera una
      ruta a la funcion =tracker=, la cual corta y marca trayectos
@@ -585,30 +582,27 @@
        tracker       ruta uno
      #+END_EXAMPLE
 
-     en este punto cada nuevo track es evaluado en busca de signos que
-     indiquen la necesidad de seguir reduciendo la exprecion
-     (=isPath=) en rutas, metacaracteres, clases de caracteres,
-     rangos, y repeticiones. De ser esto necesario se enviara el
-     trayecto a =walker= para crear un nuevo ciclo de analicis. De lo
-     contrario el =track= es comparable directamente y se optiene un
-     resultado que es enviado a =walker= quien responde a =regexp3=.
-
-     Cuando se requiere una nueva reduccion se envia una copia del
-     =track= a =walker= quien inicia una vez mas todo el proceso
-     anterior hasta optener un resultado por parte de =trekking=.
+     en este punto cada nuevo =track= es evaluado (=isPath()=) en
+     busca de signos que indiquen la necesidad de seguir reduciendo la
+     exprecion en rutas, metacaracteres, clases de caracteres, rangos,
+     y repeticiones. De ser esto necesario, el trayecto se enviara a
+     =walker= para crear un nuevo ciclo de analisis (he aqui el paso
+     recursivo). De lo contrario el =track= es comparable directamente
+     y se optiene un resultado que es enviado a =walker= quien
+     responde a =regexp3=.
 
   3. optener el numero de ciclos de repeticion para cada
      ruta/trayecto/expresion
 
      una vez que =tracker= a reducido una ruta a trayecto, envia dicho
      trayecto a =setLoops= quien dependiento lo que encuentre a
-     continuacion establece el numero de repeticiones en la variable
-     =LoopRange= (miembro de la estructura =Path=).
+     continuacion establece el numero de repeticiones en las variables
+     =LoopRange(Min|Max)= (miembros de la estructura =Path=).
 
      #+BEGIN_EXAMPLE
-       trekking  a-z    texto     (ruta uno)  *c       ?[abc]     {2,3}
+       trekking  a-z    texto     (ruta uno)  *c       ?[abc]{2,3}
        tracker   a-z    | texto   | ruta uno  | c      | abc
-       tipo      RANGEAB| SIMPLE  | HOOK      | SIMPLE | BRACKET
+       tipo      RANGEAB| SIMPLE  | GROUP     | SIMPLE | BRACKET
        continua  t      | (       | *         | ?      | {
        setLoops  1-1    | 1-1     | 0-INF     | 0-1    | 2-3
        continua  t      | (       | c         | [      | '\0'
