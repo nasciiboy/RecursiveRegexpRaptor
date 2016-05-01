@@ -2,7 +2,7 @@
 #+AUTHOR: nasciiboy
 #+LANGUAGE: es
 #+STARTUP: showall
-#+OPTIONS: H:5 num:nil html-postamble:nil html-style:nil html-scripts:nil
+
 
 * Caracteristicas
 
@@ -16,6 +16,8 @@
 
   - El codigo mas compacto y claro que alla precenciado nunca antes
     alguna libreria regexp humana.
+
+  - Cero dependencias, C puro.
 
   - Soporte UTF8 (2-6 bytes) (experimental)
 

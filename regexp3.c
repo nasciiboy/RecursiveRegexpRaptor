@@ -1,5 +1,59 @@
-#include <string.h>
-#include <ctype.h>
+int isDigit( int c ){ return c >= '0' && c <= '9'; }
+int isUpper( int c ){ return c >= 'a' && c <= 'z'; }
+int isLower( int c ){ return c >= 'A' && c <= 'Z'; }
+int isAlpha( int c ){ return isLower( c ) || isUpper( c ); }
+int isAlnum( int c ){ return isAlpha( c ) || isDigit( c ); }
+int isSpace( int c ){ return c == ' ' || (c >= '\t' && c <= '\r'); }
+
+int strLen( char *s ){
+  char *p = s;
+  while( *p ) p++;
+
+  return p - s;
+}
+
+void strCpy( char *s, char *t ){ while( (*s++ = *t++) ); }
+
+void strnCpy( char *s, char *t, unsigned int n ){
+  while( n && (*s++ = *t++) ) n--;
+
+  *s = '\0';
+}
+
+char * strChr( char *s, int c ){
+  while( *s && *s != c ) s++;
+
+  return *s ? s : 0;
+}
+
+char * strnChr( char *s, int c, int n ){
+  for( int i = 0; i < n && s[ i ]; i++ )
+    if( s[ i ] == c ) return s + i;
+
+  return 0;
+}
+
+int strnCmp( char *s, char *t, unsigned int n ){
+  for( ; *s == *t; s++, t++ )
+    if( *s == '\0' || --n <= 0 ) return 0;
+
+  return *s - *t;
+}
+
+int countDigits( int number ){
+  int i = 1;
+  while( number /= 10 ) i++;
+
+  return i;
+}
+
+int aToi( char *s ){
+  int uNumber = 0;
+  while( isDigit( *s ) )
+    uNumber = 10 * uNumber + ( *s++ - '0' );
+
+  return uNumber;
+}
 
 #include "regexp3.h"
 
@@ -58,9 +112,9 @@ int regexp3( char *line, char *exp ){
   struct PathLine pathLine;
   int atTheEnd    = FALSE;
   int result      = 0;
-  int loops       = strlen( line );
+  int loops       = strLen( line );
   path.ptr        = exp;
-  path.len        = strlen( exp );
+  path.len        = strLen( exp );
   path.type       = PATH;
   Catch.index     = 1;
   Catch.ptr[0]    = line;
@@ -140,7 +194,7 @@ int cutTrack( struct Path *path, struct Path *track, int type ){
 
 int trekking( struct Path *path, struct PathLine *pathLine ){
   struct Path track;
-  int loops, len, iCatch, opos = pathLine->pos;
+  int loops, len, iCatch, oPos = pathLine->pos;
 
   while( tracker( path, &track ) ){
     openCatch( &track, pathLine, &iCatch );
@@ -150,13 +204,13 @@ int trekking( struct Path *path, struct PathLine *pathLine ){
         loops++;
     else
       for( loops = 0; loops < track.loopsMax && pathLine->pos < pathLine->len
-             && (len = match( &track, pathLine )); ){
+                                             && (len = match( &track, pathLine )); ){
         pathLine->pos += len;
         loops++;
       }
 
     if( loops < track.loopsMin ){
-      pathLine->pos = opos;
+      pathLine->pos = oPos;
       delCatch( &track, iCatch );
       return FALSE;
     } else closeCatch( &track, pathLine, iCatch );
@@ -175,7 +229,7 @@ void trackByLen( struct Path *path, struct Path *track, int len, int type ){
 
 char * trackerPoint( char *ct, int len ){
   for( int i = 0; i < len && ct[ i ]; i++ )
-    if( strchr( ".[(<\\?+*{-", ct[ i ] ) || ct[ i ] & xooooooo ) return ct + i;
+    if( strChr( ".[(<\\?+*{-", ct[ i ] ) || ct[ i ] & xooooooo ) return ct + i;
 
   return 0;
 }
@@ -244,25 +298,10 @@ int isPath( struct Path *track ){
   switch( track->type ){
   case PATH: case HOOK: case GROUP:
     for( int i = 0; i < track->len; i++ )
-      if( strchr( "|(<[?+*{-\\", track->ptr[i] ) )
+      if( strChr( "|(<[?+*{-\\", track->ptr[i] ) )
         return TRUE;
   default: return FALSE;
   }
-}
-
-int countDigits( int number ){
-  int i = 1;
-  while( number /= 10 ) i++;
-
-  return i;
-}
-
-int atoi( char *s ){
-  int uNumber = 0;
-  while( isdigit( *s ) )
-    uNumber = 10 * uNumber + ( *s++ - '0' );
-
-  return uNumber;
 }
 
 void setLoops( struct Path *track, struct Path *path ){
@@ -275,13 +314,13 @@ void setLoops( struct Path *track, struct Path *path ){
     case '+' : len = 1; track->loopsMin = 1; track->loopsMax = INF; break;
     case '*' : len = 1; track->loopsMin = 0; track->loopsMax = INF; break;
     case '{' :
-      track->loopsMin = atoi( path->ptr + 1 ) ;
+      track->loopsMin = aToi( path->ptr + 1 ) ;
       if( path->ptr[ 1 + countDigits( track->loopsMin ) ] == ',' )
-        track->loopsMax = atoi( strchr( path->ptr, ',' ) + 1 );
+        track->loopsMax = aToi( strChr( path->ptr, ',' ) + 1 );
       else
         track->loopsMax = track->loopsMin;
 
-      len = strchr( path->ptr, '}' ) - path->ptr + 1;
+      len = strChr( path->ptr, '}' ) - path->ptr + 1;
     }
 
   path->ptr += len;
@@ -314,26 +353,25 @@ void delCatch( struct Path *track, int index ){
 int indexCatch(){ return Catch.index - 1; }
 
 char * getCatch( char * lineCatch, int index ){
-  if( index > 0 && index < Catch.index ){
-    strncpy( lineCatch, Catch.ptr[ index ], Catch.len[ index ] );
-    lineCatch[ Catch.len[ index ] ] = '\0';
-  } else *lineCatch = '\0';
+  if( index > 0 && index < Catch.index )
+    strnCpy( lineCatch, Catch.ptr[ index ], Catch.len[ index ] );
+  else *lineCatch = '\0';
 
   return lineCatch;
 }
 
 char * replaceCatch( char * newLine, char * str, int index ){
   char *origin = newLine, *line = Catch.ptr[ 0 ];
-  strcpy( origin, Catch.ptr[0] );
+  strCpy( origin, Catch.ptr[0] );
 
   for( int iCatch = 1; iCatch < Catch.index; iCatch++ )
     if( Catch.id[ iCatch ] == index ){
-      strcpy( newLine, line );
+      strCpy( newLine, line );
       newLine += Catch.ptr[ iCatch ] - line;
-      strcpy( newLine, str );
-      newLine += strlen( str );
+      strCpy( newLine, str );
+      newLine += strLen( str );
       line =  Catch.ptr[ iCatch ] + Catch.len[ iCatch ];
-      strcpy( newLine, line );
+      strCpy( newLine, line );
     }
 
   return origin;
@@ -341,22 +379,22 @@ char * replaceCatch( char * newLine, char * str, int index ){
 
 char * newLineCatch( char * newLine, char * str ){
   char index, *pos, *origin = newLine;
-  strcpy( origin, str );
+  strCpy( origin, str );
 
-  while( (pos = strchr( str, '\\' )) ){
+  while( (pos = strChr( str, '\\' )) ){
     if( pos[ 1 ] == '\\' ){
       newLine += pos + 1 - str;
       str      = pos + 2;
     } else {
-      index = atoi( pos + 1 );
-      strcpy( newLine, str );
+      index = aToi( pos + 1 );
+      strCpy( newLine, str );
       newLine += pos - str;
       newLine  = getCatch( newLine, index );
-      newLine += strlen( newLine );
+      newLine += strLen( newLine );
       str      = pos + 1 + countDigits( index );
     }
 
-    strcpy( newLine, str );
+    strCpy( newLine, str );
   }
 
   return origin;
@@ -373,12 +411,6 @@ int match( struct Path *text, struct PathLine *pathLine ){
   }
 }
 
-char * strnchr( char *s, int c, int n ){
-  for( int i = 0; i < n && s[ i ]; i++ )
-    if( s[ i ] == c ) return s + i;
-
-  return 0;
-}
 
 int matchBracket( struct Path *text, struct PathLine *pathLine ){
   struct Path track, path = *text;
@@ -390,7 +422,7 @@ int matchBracket( struct Path *text, struct PathLine *pathLine ){
     case POINT: case RANGEAB: case META: case UTF8:
       result = match( &track, pathLine ); break;
     default:
-      result = strnchr( track.ptr, pathLine->line[pathLine->pos], track.len  ) != 0;
+      result = strnChr( track.ptr, pathLine->line[pathLine->pos], track.len  ) != 0;
     }
 
     if( result ) return reverse ? FALSE : result;
@@ -401,16 +433,16 @@ int matchBracket( struct Path *text, struct PathLine *pathLine ){
 
 int matchMeta( struct Path *text, char *line ){
   switch( text->ptr[1] ){
-  case 'd' : return  isdigit(*line) != 0;
-  case 'D' : return  isdigit(*line) == 0 ? utf8meter( line ) : FALSE;
-  case 'w' : return  isalnum(*line) != 0;
-  case 'W' : return  isalnum(*line) == 0 ? utf8meter( line ) : FALSE;
-  case 's' : return  isspace(*line) != 0;
-  case 'S' : return  isspace(*line) == 0 ? utf8meter( line ) : FALSE;
+  case 'd' : return  isDigit(*line);
+  case 'D' : return  isDigit(*line) == 0 ? utf8meter( line ) : FALSE;
+  case 'w' : return  isAlnum(*line);
+  case 'W' : return  isAlnum(*line) == 0 ? utf8meter( line ) : FALSE;
+  case 's' : return  isSpace(*line);
+  case 'S' : return  isSpace(*line) == 0 ? utf8meter( line ) : FALSE;
   default  : return *line == text->ptr[1];
   }
 }
 
 int matchText( struct Path *text, char *line ){
-  return strncmp( line, text->ptr, text->len )  == 0 ? text->len : 0;
+  return strnCmp( line, text->ptr, text->len )  == 0 ? text->len : 0;
 }
