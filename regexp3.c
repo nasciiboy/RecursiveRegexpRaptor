@@ -14,8 +14,8 @@ int strLen( char *s ){
 
 void strCpy( char *s, char *t ){ while( (*s++ = *t++) ); }
 
-void strnCpy( char *s, char *t, unsigned int n ){
-  while( n && (*s++ = *t++) ) n--;
+void strnCpy( char *s, char *t, int n ){
+  while( n > 0 && (*s++ = *t++) ) n--;
 
   *s = '\0';
 }
@@ -33,18 +33,11 @@ char * strnChr( char *s, int c, int n ){
   return 0;
 }
 
-int strnCmp( char *s, char *t, unsigned int n ){
+int strnCmp( char *s, char *t, int n ){
   for( ; *s == *t; s++, t++ )
     if( *s == '\0' || --n <= 0 ) return 0;
 
   return *s - *t;
-}
-
-int countDigits( int number ){
-  int i = 1;
-  while( number /= 10 ) i++;
-
-  return i;
 }
 
 int aToi( char *s ){
@@ -55,14 +48,35 @@ int aToi( char *s ){
   return uNumber;
 }
 
+int countDigits( int number ){
+  int i = 1;
+  while( number /= 10 ) i++;
+
+  return i;
+}
+
+const unsigned char xooooooo = 0x80;
+
+int utf8meter( char *str ){
+  static unsigned char xxoooooo = 0xC0;
+  unsigned char i, utfOrNo = *str;
+
+  if( utfOrNo & xooooooo ){
+    for ( i = 1, utfOrNo <<= 1; utfOrNo & xooooooo; i++, utfOrNo <<= 1 )
+      if( (str[ i ] & xxoooooo) != xooooooo ) return 1;
+
+    if( i >= 2 && i <= 6 ) return i;
+  }
+
+  return *str ? 1 : 0;
+}
+
 #include "regexp3.h"
 
 #define TRUE       1
 #define FALSE      0
 #define INF    65536
 #define CATCHS    24
-
-const unsigned char xooooooo = 0x80;
 
 struct CATch {
   char *ptr[CATCHS];
@@ -131,7 +145,7 @@ int regexp3( char *line, char *exp ){
     loops = 1;
   }
 
-  for( int i = 0; i < loops; i++ ){
+  for( int i = 0; i < loops; i += utf8meter( line + i ) ){
     Catch.idx     = 1;
     pathLine.pos  = 0;
     pathLine.line = line + i;
@@ -232,20 +246,6 @@ char * trackerPoint( char *ct, int len ){
     if( strChr( ".[(<\\?+*{-", ct[ i ] ) || ct[ i ] & xooooooo ) return ct + i;
 
   return 0;
-}
-
-int utf8meter( char *str ){
-  static unsigned char xxoooooo = 0xC0;
-  unsigned char i, utfOrNo = *str;
-
-  if( utfOrNo & xooooooo ){
-    for ( i = 1, utfOrNo <<= 1; utfOrNo & xooooooo; i++, utfOrNo <<= 1 )
-      if( (str[ i ] & xxoooooo) != xooooooo ) return 1;
-
-    if( i >= 2 && i <= 6 ) return i;
-  }
-
-  return *str ? 1 : 0;
 }
 
 int tracker( struct Path *path, struct Path *track ){

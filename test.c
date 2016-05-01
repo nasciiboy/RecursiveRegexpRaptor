@@ -222,6 +222,11 @@ int rtest(){
   NTEST( "Raptor Test", "^Raptor Test", 1 );
   NTEST( "Raptor Test", "Raptor|Test |Dinosaur", 1 );
   NTEST( "Raptor Test Fest", "Raptor|Test|Fest", 3 );
+  NTEST( "123456789", ".", 9 );
+  NTEST( "△23△567▲△", ".", 9 );
+  NTEST( "△23△567▲△", "\\W", 4 );
+  NTEST( "▲△▲△▲△▲△▲", ".", 9 );
+  NTEST( "▲△▲△▲△▲△▲", "\\W", 9 );
   NTEST( "1a2a3a4a5a6a", "a", 6 );
   NTEST( "1a2a3a4a5a6a", "1-6a", 6 );
   NTEST( "1a2a3a4a5a6a", "1-3a", 3 );
