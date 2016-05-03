@@ -75,7 +75,7 @@
    Se ha echo uso del "editor" GNU Emacs y el compilador gcc version
    5.3.1, corriendo en fedora 23.
 
-   para compilar solo hace falta un
+   para compilar solo hace falta
 
    #+BEGIN_SRC sh
      gcc test.c regexp3.c
@@ -88,6 +88,21 @@
    #+END_SRC
 
 * Uso
+
+  Para incluir Recursive Regexp Raptor en su codigo necesita colocar
+  los ficheros =regexp3.c=, =regexp3.h= y =charUtils.h= dentro de la
+  carpeta de su proyecto. Despues incluir el encabezado
+
+  #+BEGIN_SRC c
+    #include "regexp3.h"
+  #+END_SRC
+
+  donde desee utilizar la libreria, y finalmente agregar =regexp3.c= a
+  los achivos de compilacion
+
+  #+BEGIN_SRC sh
+    gcc miProyecto.c regexp3.c
+  #+END_SRC
 
   La unica funcion de busqueda es =regexp3= aqui su prototipo:
 
@@ -445,6 +460,7 @@
    - \\W : cualquier carácter no alfanumérico.
    - \\s : espacio en blanco.
    - \\S : cualquier carácter que no sea un espacio en blanco.
+   - \\& : caracter no ascii (apartir de 0x80, multibyte o no).
 
 
    - NOTA :: los anteriores (y siguietes) caracteres requieren doble
@@ -649,7 +665,7 @@
    la busqueda y =len= contiene la longitud de la cadena.
 
    #+BEGIN_SRC c
-     enum PTYPE { PATH, HOOK, SIMPLE, BRACKET, RANGEAB, META, POINT, UTF8 };
+     enum PTYPE { PATH, GROUP, HOOK, SIMPLE, BRACKET, RANGEAB, META, POINT, UTF8 };
 
      struct Path {
        int   len;
@@ -669,7 +685,8 @@
    =type= indica el tipo.
 
    - =PATH= ruta principal.
-   - =HOOK= agrupacion.
+   - =GROUP= agrupacion.
+   - =HOOK= agrupacion y captura.
    - =SIMPLE= texto simple directamente comparable.
    - =BRACKET= clase de caracteres
    - =RANGEAB= rango de caracteres.
