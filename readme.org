@@ -8,8 +8,7 @@
 
   - Manejo sencillo,
 
-  - Sin verificacion de errores en la exprecion regular resivida. C no
-    es asi.
+  - Sin verificacion de errores en la exprecion resivida. C no es asi.
 
   - Numero de rutas y agrupamientos limitado solo por la capacidad del
     sistema/hardware
@@ -33,8 +32,8 @@
 * Introduccion
 
   *Recurseve Regexp Raptor* es una libreria de busqueda, captura y
-  reemplazo de expresiones regulares escrita en C, buscando los
-  siguientes lineamientos:
+  reemplazo de expresiones regulares escrita en lenguaje C, buscando
+  lo siguiente:
 
   - Cumplir con la mayoria de funciones esperadas por una libreria de
     este tipo.
@@ -91,14 +90,14 @@
 
   Para incluir Recursive Regexp Raptor en su codigo necesita colocar
   los ficheros =regexp3.c=, =regexp3.h= y =charUtils.h= dentro de la
-  carpeta de su proyecto. Despues incluir el encabezado
+  carpeta de su proyecto. Debe incluir el encabezado
 
   #+BEGIN_SRC c
     #include "regexp3.h"
   #+END_SRC
 
-  donde desee utilizar la libreria, y finalmente agregar =regexp3.c= a
-  los achivos de compilacion
+  donde desee utilizar la libreria, y finalmente agregar =regexp3.c=
+  al comando de compilacion
 
   #+BEGIN_SRC sh
     gcc miProyecto.c regexp3.c
@@ -324,11 +323,11 @@
      primer captura               segunda captura      tercer captura
    #+END_EXAMPLE
 
-   para recuperar una captura se hace uso de la funcion =getCatch=,
-   aqui su prototipo:
+   la funcion =cpytCatch= copia la captura dentro de un arreglo de
+   caracteres, aqui su prototipo:
 
    #+BEGIN_SRC c
-     char * getCatch( char * lineCatch, int index )
+     char * cpyCatch( char * lineCatch, int index )
    #+END_SRC
 
    - lineCatch :: puntero lo suficientemete grande para contener la
@@ -342,10 +341,10 @@
    indice incorrecto regresara un apuntador que inicia en '\0'.
 
    para optener el numero de agrupaciones capturadas utlice
-   =indexCatch=:
+   =totCatch=:
 
    #+BEGIN_SRC c
-     int indexCatch();
+     int totCatch();
    #+END_SRC
 
    que regresa un valor de =0= a =n=. Podria utilzar esta y la
@@ -355,10 +354,33 @@
    #+BEGIN_SRC c
      void printCatch(){
        char lineCatch[128];
-       int i = 0, max = indexCatch();
+       int i = 0, max = totCatch();
 
        while( ++i <= max )
-         printf( "#%d# >%s<\n", i, getCatch( lineCatch, i ) );
+         printf( "#%d# >%s<\n", i, cpyCatch( lineCatch, i ) );
+     }
+   #+END_SRC
+
+** =gpsCatch()= y =lenCatch()=
+
+   una alternativa a =cpyCatch()=, son las funciones =gpsCatch()= y
+   =lenCatch()=. La primera regresa un puntero a la posicion donde fue
+   encontrada la captura, la segunda regresa la longitud de la
+   captura.
+
+   #+BEGIN_SRC c
+     char * gpsCatch( int index );
+     int lenCatch   ( int index );
+   #+END_SRC
+
+   un ejemplo de uso seria:
+
+   #+BEGIN_SRC c
+     void printCatch(){
+       int i = 0, max = totCatch();
+
+       while( ++i <= max )
+         printf( "#%d# >%.*s<\n", i, lenCatch( i ), gpsCatch( i ) );
      }
    #+END_SRC
 
@@ -723,6 +745,6 @@
   obra que incluya o derive codigo de esta libreria, debera cumplir
   con los terminos de esta licencia.
 
-* Contacto, contribucion, patrocinio, ofrecimientos y otras cosas
+* Contacto, contribucion y otras cosas
 
   [[mailto:nasciiboy@gmail.com]]

@@ -1,5 +1,6 @@
 /*************************************************************************
  * <Recursive Regexp Raptor (regexp3) regexp library.>
+ * https://github.com/nasciiboy/RecursiveRegexpRaptor
  * Copyright (C) <2016>  <nasciiboy>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,8 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-int    regexp3( char *line, char *exp );
-char * getCatch( char * lineCatch, int index );
-int    indexCatch();
+int    regexp3 ( char *line      , char *exp );
+char * cpyCatch( char * lineCatch, int index );
+int    totCatch(                             );
+char * gpsCatch(                   int index );
+int    lenCatch(                   int index );
 char * replaceCatch( char * newLine, char * str, int index );
 char * newLineCatch( char * newLine, char * str );

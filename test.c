@@ -5,10 +5,10 @@
 
 void printCatch(){
   char lineCatch[128];
-  int i = 0, max = indexCatch();
+  int i = 0, max = totCatch();
 
   while( ++i <= max )
-    printf( "#%d# >%s<\n", i, getCatch( lineCatch, i ) );
+    printf( "#%d# >%s<\n", i, cpyCatch( lineCatch, i ) );
 }
 
 int rtest(){
