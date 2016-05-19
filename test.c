@@ -235,19 +235,22 @@ int rtest(){
   NTEST( "ae ai au aw aa", " aa$", 1 );
   NTEST( "ae ai au aw aa", "(a[^a])", 4 );
   NTEST( "ae ai au aw aa", "(a[^a])+", 4 );
-  NTEST( "ae ai au aw aa", "(a[^a])*", 14 );
-  NTEST( "ae ai au aw aa", "(a[^a])?", 14 );
-  NTEST( "ae ai au aw aa", "(a[ei])?", 14 );
+  NTEST( "ae ai au aw aa", "(a[^a])*", 10 );
+  NTEST( "ae ai au aw aa", "(a[^a])?", 10 );
+  NTEST( "ae ai au aw aa", "(a[ei])?", 12 );
   NTEST( "ae ai au aw aa", "(a[ei])", 2 );
   NTEST( "ae ai au aw aa", "(a[ei] ?){2}", 1 );
   NTEST( "ae ai au aw aa", "(ae|(ai|au))", 3 );
   NTEST( "ae ai au aw aa", "<i a|u a>", 2 );
-  NTEST( "ae ai au aw aa", "(i a|u a)*", 14 );
-  NTEST( "ae ai au aw aa", "(i a(u a)+)*", 14 );
+  NTEST( "ae ai au aw aa", "(i a|u a)*", 9 );
+  NTEST( "ae ai au aw aa", "(i a(u a)+)*", 9 );
   NTEST( "ae ai au aw aa", "(i a(u a)+)+", 1 );
   NTEST( "Raptor Test Fest", "(Raptor (Test (Fest)))", 1 );
   NTEST( "Raptor Test Fest", "(((Raptor) Test) Fest)", 1 );
   NTEST( "Raptor Raptors Raptoring", "(Raptor(\\w+)?) ?", 3 );
+  NTEST( "@@b(bold)@e<emphasis>", "<@{1,2}[^@\x01-\x20\\&\\{\\(\\<\\[]+[\\{\\(\\<\\[]>", 2 );
+  NTEST( "@@b(bold)@e<emphasis>", "?<@{1,2}[^@\x01-\x20\\&\\{\\(\\<\\[]+[\\{\\(\\<\\[]>", 1 );
+
 
   char line[1024];
 #define CATCH_AND_REPLACE_TEST( str, exp, n, rstr, cstr )       \

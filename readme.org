@@ -153,6 +153,18 @@
               especial.
 
 
+  - detener con la primer coincidencia "?exp"
+
+    #+BEGIN_SRC c
+      regexp3( "Raptor Test", "?Raptor Test" );
+    #+END_SRC
+
+    - NOTA :: el caracter '?' se utiliza para establecer si una
+              exprecion puede o no estar presente en la busqueda. Solo
+              al colocarse al inicio de la exprecion indica "Detener
+              la busqueda con la primer coincidencia"
+
+
   - opciones de busqueda multiples "exp1|exp2"
 
     #+BEGIN_SRC c
@@ -299,6 +311,28 @@
       regexp3( "Raptor Test", "<Raptor>" );
     #+END_SRC
 
+** Comportamiento al recorrer el texto de busqueda
+
+   Al localizar una coincidencia, la nueva busqueda inicia a partir
+   del final de dicha coincidencia en lugar del caracter siguiente al
+   inicio de la coincidencia. Si desea realizar una busqueda caracter
+   a caracter (incluyendo caracteres UTF-8 de longitud variable)
+   elimine el fragmento de codigo
+
+   #+BEGIN_SRC c
+     match && pathLine.pos ? pathLine.pos :
+   #+END_SRC
+
+   dentro de la funcion =regexp3= en el fichero =regexp3.c=.
+
+   Adicionalmente podria no estar interesado en utilizar la libreria
+   con caracteres no ASCII, para obtener una considerable mejora de
+   rendimiento serian necesarias algunas modificaciones menores como
+   eliminar todo el codigo referente a =UTF=, la funcion =utf8meter=,
+   y la constante =xooooooo=, asi como substituir la aparicion de
+   =utf8meter= por =1=, =++= o alguna expresion equivalente, donde sea
+   necesario.
+
 ** Recuperacion de captura
 
    Cualquier agrupacion "<exp>" exitosa, genera una captura del texto
@@ -361,28 +395,28 @@
      }
    #+END_SRC
 
-** =gpsCatch()= y =lenCatch()=
+*** =gpsCatch()= y =lenCatch()=
 
-   una alternativa a =cpyCatch()=, son las funciones =gpsCatch()= y
-   =lenCatch()=. La primera regresa un puntero a la posicion donde fue
-   encontrada la captura, la segunda regresa la longitud de la
-   captura.
+    una alternativa a =cpyCatch()=, son las funciones =gpsCatch()= y
+    =lenCatch()=. La primera regresa un puntero a la posicion donde
+    fue encontrada la captura, la segunda regresa la longitud de la
+    captura.
 
-   #+BEGIN_SRC c
-     char * gpsCatch( int index );
-     int lenCatch   ( int index );
-   #+END_SRC
+    #+BEGIN_SRC c
+      char * gpsCatch( int index );
+      int lenCatch   ( int index );
+    #+END_SRC
 
-   un ejemplo de uso seria:
+    un ejemplo de uso seria:
 
-   #+BEGIN_SRC c
-     void printCatch(){
-       int i = 0, max = totCatch();
+    #+BEGIN_SRC c
+      void printCatch(){
+        int i = 0, max = totCatch();
 
-       while( ++i <= max )
-         printf( "#%d# >%.*s<\n", i, lenCatch( i ), gpsCatch( i ) );
-     }
-   #+END_SRC
+        while( ++i <= max )
+          printf( "#%d# >%.*s<\n", i, lenCatch( i ), gpsCatch( i ) );
+      }
+    #+END_SRC
 
 *** Colocar capturas dentro de una linea
 
@@ -570,7 +604,7 @@
 
 * Hacking
 
-  Cual es el algoritmo para resolver una estructura regular?
+  Cual es el algoritmo para resolver una exprecion regular?
 
   1. Dividir la expresion en sus rutas principales.
 
@@ -583,8 +617,8 @@
 
      La posicion de cada expresion es indicativa del orden en que debe
      resolverse. Una ruta principal se encuentra en el nivel de
-     anidamiento *cero* es decir no esta agrupada dentro de otra
-     exprecion.
+     anidamiento *cero* es decir esta fuara de cualquier nivel de
+     agrupamiento.
 
      #+BEGIN_EXAMPLE
        (ruta uno) | ( (ruta dos a | rutad dos b) ) | ruta n
@@ -593,20 +627,39 @@
                       = 2 ======================
      #+END_EXAMPLE
 
-     un nuevo nivel de anidamiento surge utilizando '(' y finaliza con
-     ')'. Cada '(' aumenta el anidamiento en 1 y cada ')' lo
-     disminulle en 1, si encontramas '|' al tener anidamiento 0, hemos
-     encontrado una ruta principal.
+     un nuevo nivel de anidamiento surge al agrupar una parte de la
+     exprecion iniciando con '(' y finalizando con ')'. Cada '('
+     aumenta el anidamiento en 1 y cada ')' lo disminulle en 1, si
+     encontramas '|' al tener anidamiento 0, hemos encontrado una ruta
+     principal.
 
      la funcion =walker= optiene cada ruta pricipal secuencalmente,
      para ser enviada a =trekking= (senderista) quien debe reducirla a
      expreciones aun mas sencillas.
 
      #+BEGIN_EXAMPLE
-       inicio   # (ruta uno) | ( (ruta dos a | rutad dos b) ) | ruta n
-       ruta uno # (ruta uno)
-       ruta dos #              ( (ruta dos a | rutad dos b) )
-       ruta n   #                                               ruta n
+       inicio     # (ruta uno) | ( (ruta dos a | ruta dos b) ) | ruta n
+
+       ## REDUCCION UNO
+       ruta uno   # (ruta uno)
+       ruta dos   #              ( (ruta dos a | ruta dos b) )
+       ruta n     #                                              ruta n
+
+       ## REDUCCION DOS
+       ruta uno   #  ruta uno
+       ruta dos   #                (ruta dos a | ruta dos b)
+       ruta n     #                                              evaluando
+
+       ## REDUCCION TRES
+       ruta uno   #  evaluando
+       ruta dos a #                 ruta dos a
+       ruta dos b #                              ruta dos b
+       ruta n     #                                              terminado
+
+       ## REDUCCION TRES
+       ruta uno   #  terminado
+       ruta dos a #                 evaluando
+       ruta dos b #                              evaluando
      #+END_EXAMPLE
 
   2. Una ruta principal debe descomponerse en senderos o trayectos,
@@ -672,7 +725,7 @@
    =CATCHS= establece la cantidad de capturas maximas detro de cada
    busqueda.
 
-** Estructuras y enumeracines
+** Estructuras y enumeraciones
 
    #+BEGIN_SRC c
      struct PathLine {

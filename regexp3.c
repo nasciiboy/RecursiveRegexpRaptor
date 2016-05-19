@@ -48,6 +48,7 @@ static int   matchText   ( struct Path *text,           char     *line          
 int regexp3( char *line, char *exp ){
   struct Path     path;
   struct PathLine pathLine;
+  int lonleyWalk  = FALSE;
   int atTheEnd    = FALSE;
   int result      = 0;
   int loops       = strLen( line );
@@ -65,24 +66,29 @@ int regexp3( char *line, char *exp ){
     path.len--;
   }
 
-  if( *exp == '^' ){
+  if( *path.ptr == '^' ){
+    loops = 1;
     path.ptr++;
     path.len--;
-    loops = 1;
   }
 
-  for( int i = 0; i < loops; i += utf8meter( line + i ) ){
+  if( *path.ptr == '?' ){
+    lonleyWalk = TRUE;
+    path.ptr++;
+    path.len--;
+  }
+
+  for( int i = 0, match; i < loops; i += match && pathLine.pos ? pathLine.pos : utf8meter( line + i ) ){
+    match         = 0;
     Catch.idx     = 1;
     pathLine.pos  = 0;
     pathLine.line = line + i;
     pathLine.len  = Catch.len[0] - i;
 
     if( atTheEnd ){
-      result = walker( path, &pathLine );
-
-      if( result && pathLine.pos == pathLine.len ) i = loops;
-      else result = 0;
-    } else result += walker( path, &pathLine );
+      if( walker( path, &pathLine ) && pathLine.pos == pathLine.len ) return TRUE;
+    } else if( (match = walker( path, &pathLine ))  && lonleyWalk   ) return TRUE;
+    else result += match;
   }
 
   return result;
@@ -341,7 +347,6 @@ static int match( struct Path *text, struct PathLine *pathLine ){
   default     : return matchText( text, pathLine->line + pathLine->pos );
   }
 }
-
 
 static int matchBracket( struct Path *text, struct PathLine *pathLine ){
   struct Path track, path = *text;
