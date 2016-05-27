@@ -23,8 +23,9 @@ struct PathLine {
 enum PTYPE { PATH, HOOK, GROUP, SIMPLE, BRACKET, RANGEAB, META, POINT, UTF8 };
 
 struct Path {
-  int   len;
   char *ptr;
+  int   len;
+  int   neg;
   enum  PTYPE type;
   int   loopsMin, loopsMax;
 };
@@ -78,8 +79,8 @@ int regexp3( char *line, char *exp ){
     path.len--;
   }
 
-  for( int i = 0, match; i < loops; i += match && pathLine.pos ? pathLine.pos : utf8meter( line + i ) ){
-    match         = 0;
+  for( int i = 0, hit; i < loops; i += hit && pathLine.pos ? pathLine.pos : utf8meter( line + i ) ){
+    hit           = 0;
     Catch.idx     = 1;
     pathLine.pos  = 0;
     pathLine.line = line + i;
@@ -87,8 +88,8 @@ int regexp3( char *line, char *exp ){
 
     if( atTheEnd ){
       if( walker( path, &pathLine ) && pathLine.pos == pathLine.len ) return TRUE;
-    } else if( (match = walker( path, &pathLine ))  && lonleyWalk   ) return TRUE;
-    else result += match;
+    } else if( (hit = walker( path, &pathLine ))    && lonleyWalk   ) return TRUE;
+    else result += hit;
   }
 
   return result;
@@ -140,18 +141,32 @@ static int cutTrack( struct Path *path, struct Path *track, int type ){
 
 static int trekking( struct Path *path, struct PathLine *pathLine ){
   struct Path track;
-  int loops, len, iCatch, oPos = pathLine->pos;
+  int iCatch, loops, steps, oPos = pathLine->pos;
 
   while( tracker( path, &track ) ){
     openCatch( &track, pathLine, &iCatch );
 
-    if( isPath( &track ) )
-      for( loops = 0; loops < track.loopsMax && walker( track, pathLine ); )
+    if( isPath( &track ) ){
+      if( track.neg ){
+        for( loops = 0, steps = pathLine->pos; loops < track.loopsMax && !walker( track, pathLine ); ){
+          steps += utf8meter( pathLine->line + steps );
+          pathLine->pos = steps;
+          loops++;
+        }
+
+        pathLine->pos = steps;
+      } else
+        for( loops = 0; loops < track.loopsMax && walker( track, pathLine ); )
+          loops++;
+    } else if( track.neg )
+      for( loops = 0; loops < track.loopsMax && pathLine->pos < pathLine->len && !match( &track, pathLine ); ){
+        pathLine->pos += utf8meter( pathLine->line + pathLine->pos  );
         loops++;
+      }
     else
       for( loops = 0; loops < track.loopsMax && pathLine->pos < pathLine->len
-                                             && (len = match( &track, pathLine )); ){
-        pathLine->pos += len;
+                                             && (steps = match( &track, pathLine )); ){
+        pathLine->pos += steps;
         loops++;
       }
 
@@ -165,6 +180,7 @@ static int trekking( struct Path *path, struct PathLine *pathLine ){
   return TRUE;
 }
 
+
 static void trackByLen( struct Path *path, struct Path *track, int len, int type ){
   track->ptr   = path->ptr;
   track->type  = type;
@@ -175,12 +191,17 @@ static void trackByLen( struct Path *path, struct Path *track, int len, int type
 
 static char * trackerPoint( char *ct, int len ){
   for( int i = 0; i < len && ct[ i ]; i++ )
-    if( strChr( ".[(<\\?+*{-", ct[ i ] ) || ct[ i ] & xooooooo ) return ct + i;
+    if( strChr( "(<[.?+*{-\\!", ct[ i ] ) || ct[ i ] & xooooooo ) return ct + i;
 
   return 0;
 }
 
 static int tracker( struct Path *path, struct Path *track ){
+  if( *path->ptr == '!' ){
+      track->neg = TRUE;
+      path->len--; path->ptr++;
+  } else track->neg = FALSE;
+
   if( path->len ){
     char *point;
 
@@ -227,7 +248,7 @@ static int isPath( struct Path *track ){
   switch( track->type ){
   case PATH: case HOOK: case GROUP:
     for( int i = 0; i < track->len; i++ )
-      if( strChr( "|(<[?+*{-\\", track->ptr[i] ) )
+      if( strChr( "|(<[.?+*{-\\!", track->ptr[i] ) )
         return TRUE;
   default: return FALSE;
   }
@@ -350,7 +371,7 @@ static int match( struct Path *text, struct PathLine *pathLine ){
 
 static int matchBracket( struct Path *text, struct PathLine *pathLine ){
   struct Path track, path = *text;
-  int result= 0;
+  int result  = 0;
   int reverse = *text->ptr == '^';
   if( reverse ){ path.len--; path.ptr++; }
   while( tracker( &path, &track ) ){

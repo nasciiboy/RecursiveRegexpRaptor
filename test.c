@@ -4,11 +4,10 @@
 #include "regexp3.h"
 
 void printCatch(){
-  char lineCatch[128];
   int i = 0, max = totCatch();
 
   while( ++i <= max )
-    printf( "#%d# >%s<\n", i, cpyCatch( lineCatch, i ) );
+    printf( "#%d# >%.*s<\n", i, lenCatch( i ), gpsCatch( i ) );
 }
 
 int rtest(){
@@ -106,6 +105,31 @@ int rtest(){
   TRUE_TEST( "contacto (nasciiboy@gmail.com) $$", "<\\w+@\\w+\\.\\w+>" );
   TRUE_TEST( "1. rango entre 1985-2014.", "\\D?<\\d{4}>\\D?$" );
 
+  TRUE_TEST( "Raptor Test", "^!Raptos" );
+  TRUE_TEST( "Raptor Test", "^![^R]..... Test" );
+  TRUE_TEST( "Raptor Test", "^(R)..... Test" );
+  TRUE_TEST( "Raptor Test", "^!(C)..... Test$" );
+  TRUE_TEST( "Raptor Test", "^!<C>..... Test$" );
+  TRUE_TEST( "Raptor Test", "^!<a-z|\\d>..... Test$" );
+  TRUE_TEST( "Raptor Test", "^!<a-z|S-Z|\\s>..... Test$" );
+  TRUE_TEST( "Raptor Test", "^<(R)>..... Test$" );
+  TRUE_TEST( "Raptor Test", "^!<(C)>..... Test$" );
+  TRUE_TEST( " R aptor Test", "^!<( C )>" );
+  TRUE_TEST( " R aptor Test", "^!<( (N|G|E).)>" );
+  TRUE_TEST( "Raptor Test", "^<!(N|G|E)>" );
+  TRUE_TEST( "Raptor Test", "^<!(N|G|E)>" );
+  TRUE_TEST( "Raptor Test", "^<!((N )|(G|_)|E)>" );
+  TRUE_TEST( "Raptor Test", "^<!R|!(R|R)|R>" );
+  TRUE_TEST( "Raptor Test", "^<(R)>..... Test$" );
+
+  TRUE_TEST( "<< text : text :: text", "^\\s*<[\\<^_\\>]{2}>\\s+<!( (\\<:|::|:\\>|\\>:\\<) )+> <\\<:|::|:\\>|\\>:\\<> <.*>" );
+   printCatch();
+  TRUE_TEST( "<^ text : text <: text", "^\\s*<[\\<^_\\>][\\<^_\\>]>\\s+<!( (\\<:|::|:\\>|\\>:\\<) )+> <\\<:|::|:\\>|\\>:\\<> <.*>" );
+  //  printCatch();
+  TRUE_TEST( "^^ text : text :> text", "^\\s*<[\\<^_\\>][\\<^_\\>]>\\s+<!( (\\<:|::|:\\>|\\>:\\<) )+> <\\<:|::|:\\>|\\>:\\<> <.*>" );
+  //  printCatch();
+  TRUE_TEST( "_< text : text >:< text", "^\\s*<[\\<^_\\>][\\<^_\\>]>\\s+<!( (\\<:|::|:\\>|\\>:\\<) )+> <\\<:|::|:\\>|\\>:\\<> <.*>" );
+  //  printCatch();
 
 #define FALSE_TEST( str, exp )                          \
   result = regexp3( str, exp );                         \
@@ -117,12 +141,12 @@ int rtest(){
 
   FALSE_TEST( "", "" );
   FALSE_TEST( "Raptor Test", "" );
+  FALSE_TEST( "", "Raptor Test" );
   FALSE_TEST( "Raptor Test", "^" );
   FALSE_TEST( "Raptor Test", "$" );
   FALSE_TEST( "Raptor Test", "|" );
   FALSE_TEST( "Raptor Test", "()" );
   FALSE_TEST( "Raptor Test", "|(|)" );
-  FALSE_TEST( "", "Raptor Test" );
   FALSE_TEST( "Raptor Test", "Captor" );
   FALSE_TEST( "Raptor Test", "Fest" );
   FALSE_TEST( "Raptor Test", "e T" );
@@ -202,6 +226,9 @@ int rtest(){
   FALSE_TEST( "contacto (nasciiboy^gmail.com) $$", "<\\w+@\\w+\\.\\w+>" );
   FALSE_TEST( "1. rango entre 1985-201A.", "\\D?(\\d{4})\\D?$" );
 
+  FALSE_TEST( "Raptor Test", "^!Raptor" );
+  FALSE_TEST( "Raptor Test", "^![R]aptos" );
+
 #define NTEST( str, exp, n )                                    \
   result = regexp3( str, exp );                                 \
   total++;                                                      \
@@ -222,8 +249,20 @@ int rtest(){
   NTEST( "Raptor Test", "^Raptor Test", 1 );
   NTEST( "Raptor Test", "Raptor|Test |Dinosaur", 1 );
   NTEST( "Raptor Test Fest", "Raptor|Test|Fest", 3 );
+  NTEST( "Raptor Test", "."  , 11 );
+  NTEST( "Raptor Test", "\\w", 10 );
+  NTEST( "Raptor Test", "\\s", 1  );
+  NTEST( "Raptor Test", "[t]", 2  );
+  NTEST( "Raptor Test", "[^t]", 9  );
+  NTEST( "Raptor Test", "a|e|i|o|u", 3  );
+  NTEST( "Raptor Test", "[aeiou]", 3  );
   NTEST( "123456789", ".", 9 );
   NTEST( "△23△567▲△", ".", 9 );
+  NTEST( "123456789", "^.", 1 );
+  NTEST( "123456789", "?.", 1 );
+  NTEST( "123456789", "^7", 0 );
+  NTEST( "123456789", "?7", 1 );
+  NTEST( "123456789", "^?1", 1 );
   NTEST( "△23△567▲△", "\\W", 4 );
   NTEST( "▲△▲△▲△▲△▲", ".", 9 );
   NTEST( "▲△▲△▲△▲△▲", "\\W", 9 );
@@ -250,9 +289,28 @@ int rtest(){
   NTEST( "Raptor Raptors Raptoring", "(Raptor(\\w+)?) ?", 3 );
   NTEST( "@@b(bold)@e<emphasis>", "<@{1,2}[^@\x01-\x20\\&\\{\\(\\<\\[]+[\\{\\(\\<\\[]>", 2 );
   NTEST( "@@b(bold)@e<emphasis>", "?<@{1,2}[^@\x01-\x20\\&\\{\\(\\<\\[]+[\\{\\(\\<\\[]>", 1 );
-
+  NTEST( "Raptor Test", "![r]", 10 );
+  NTEST( "Raptor Test", "[^r]", 10 );
+  NTEST( "Raptor Test", "![^t]", 2 );
 
   char line[1024];
+#define CATCH_TEST( str, exp, n, rstr )                         \
+  result = regexp3( str, exp );                                 \
+  total++;                                                      \
+  if( strcmp( cpyCatch( line, n ), rstr ) != 0 ){               \
+    printf( "Error on " str ", " exp "\n" );                    \
+    printf( "result    >>%s<<\n"                                \
+            "expected  >>%s<<\n", line, rstr );                 \
+    errs++;                                                     \
+  }
+
+  CATCH_TEST( "Raptor Test", "^!<(r )>+", 1, "Rapto" );
+  CATCH_TEST( "Raptor Test", "^!<r |r >+", 1, "Rapto" );
+  CATCH_TEST( "Raptor Test", "^<!((r ))+>", 1, "Rapto" );
+  CATCH_TEST( "Raptor Test", "^<!(r )+>", 1, "Rapto" );
+  CATCH_TEST( "Raptor Test", "^!<r >+", 1, "Rapto" );
+  CATCH_TEST( "Raptor Test", "^<!(r |r )>+", 1, "Rapto" );
+
 #define CATCH_AND_REPLACE_TEST( str, exp, n, rstr, cstr )       \
   result = regexp3( str, exp );                                 \
   total++;                                                      \
@@ -296,7 +354,6 @@ int rtest(){
   NEWLINE_TEST( "1995-12/65", "<\\d{4}>(\\-|/)<\\d{2}>(\\-|/)<\\d{2}>", "\\1::\\2::\\3", "1995::12::65" );
   NEWLINE_TEST( "1995-12/65", "<\\d{4}>(\\-|/)<\\d{2}>(\\-|/)<\\d{2}>", "\\1::\\2::\\Raptor", "1995::12::aptor" );
   NEWLINE_TEST( "make a new Line", "^<[^n]+>", "\\1raptor", "make a raptor" );
-
 
   printf( "TEST %d *** ERRS %d\n\n", total, errs );
   return !errs;

@@ -16,7 +16,8 @@
   - El codigo mas compacto y claro que alla precenciado nunca antes
     alguna libreria regexp humana.
 
-  - Cero dependencias, C puro.
+  - Cero dependencias. Ni la libreria estandar de C esta
+    precente *C PURO*.
 
   - Soporte UTF8 (2-6 bytes) (experimental)
 
@@ -28,6 +29,8 @@
   - Reemplazo de capturas
 
   - Creacion de una nueva linea agregando capturas
+
+  - Negacion de expreciones (experimental)
 
 * Introduccion
 
@@ -47,17 +50,19 @@
 ** Motivacion
 
    Partiendo de que C no dispone de una libreria estandar de
-   expresiones regulares, se planteo la busqueda de una alternativa
+   expresiones regulares, se planteo la busqueda de una opcion
    funcional de la cual aprender un poco, GNU tiene tanto gawk como la
    libreria regexp, sin embargo el autor de este trabajo (que igual y
    es un poco retard) encontro en ambas codigo rebuscado y mistico
    repartido en varios ficheros, llenos de macros y variables
    cripticas.
 
-   La siguiente opcion fue [[https://github.com/cesanta/slre][slre]] cuya principal cararacteristica
-   promocional es tener codigo compacto, aunque no mas claro, que
-   ademas fallaba si existia un nivel de anidamiento siguiente al
-   previo es decir:
+   La siguiente opcion fue la libreria [[https://github.com/cesanta/slre][slre]] cuya principal
+   cararacteristica es tener codigo compacto, aunque no mas claro,
+   luego de algunos dias descifrando el codigo se descubrio que el
+   algoritmo utilizado no era general, cuando la exprecion tenia mas
+   de un bloque de anidamiento el resultado siempre es incorrecto es
+   decir:
 
    #+BEGIN_EXAMPLE
      (((a|b)))((x|b))
@@ -90,7 +95,7 @@
 
   Para incluir Recursive Regexp Raptor en su codigo necesita colocar
   los ficheros =regexp3.c=, =regexp3.h= y =charUtils.h= dentro de la
-  carpeta de su proyecto. Debe incluir el encabezado
+  carpeta de su proyecto. Luego incluir el encabezado
 
   #+BEGIN_SRC c
     #include "regexp3.h"
@@ -121,7 +126,7 @@
 
   La sintaxis de la exprecion regular puede contener:
 
-  - busqueda de texto /simple/ en cualquier lugar de una linea:
+  - busqueda de texto en cualquier ubicacion:
 
     #+BEGIN_SRC c
       regexp3( "Raptor Test", "Raptor" );
@@ -210,6 +215,33 @@
     #+BEGIN_SRC c
       regexp3( "Raptor Test", "R[^uoie]ptor" );
     #+END_SRC
+
+  - *negacion de exprecion* "!exp" (experimental)
+
+    El signo de negacion '!' ha de preceder la exprecion a /negar/ por
+    ejemplo si desea negar un conjunto de caracteres
+
+    #+BEGIN_EXAMPLE
+      ![abc]
+    #+END_EXAMPLE
+
+    para una agrupacion
+
+    #+BEGIN_EXAMPLE
+      !(abc|def)
+    #+END_EXAMPLE
+
+    para texto
+
+    #+BEGIN_EXAMPLE
+      !abc
+    #+END_EXAMPLE
+
+    combinacion
+
+    #+BEGIN_EXAMPLE
+      !texto![conjunto]!(agrupacion)
+    #+END_EXAMPLE
 
   - coincidencia con cualquier caracter '.'
 
@@ -332,6 +364,12 @@
    y la constante =xooooooo=, asi como substituir la aparicion de
    =utf8meter= por =1=, =++= o alguna expresion equivalente, donde sea
    necesario.
+
+*** Comportamiento al recorrer el texto de busqueda con negacion de exprecion
+
+    Una exprecios inversa (=!exp=) avanza recorre el texto un caracter
+    a la ves si la exprecion no es encontrada, de lo contrario, la
+    posicion de busqueda se detiene al inicio de la exprecion
 
 ** Recuperacion de captura
 
@@ -526,6 +564,7 @@
    - \\| : barra vertical
    - \\^ : acento circunflejo
    - \\$ : signo dolar
+   - \\! : negacion
    - \\( : parentesis izquierdo
    - \\) : parentesis derecho
    - \\< : mayor que
@@ -576,6 +615,29 @@
    - "Rap CaaptorTest"
    - ...
 
+
+   #+BEGIN_SRC c
+     regexp3( "<< abcde : fghi jklm :: nrstu vwxyz", "^\\s*<[\\<^_\\>]{2}>\\s+<!( (\\<:|::|:\\>|\\>:\\<) )+> <\\<:|::|:\\>|\\>:\\<> <.*>" );
+   #+END_SRC
+
+   1. Cadena que inicia con cero o mas espacios
+   2. Captura dos caracteres de la agrupacion =[\\<^_\\>]=
+   3. Debe contuniuar uno a mas espacios en blanco
+   4. Captura caracteres mientras no coincida con el patron =(
+      (\\<:|::|:\\>|\\>:\\<) )= (espacio segudo por "<:", "::", ":>",
+      ">:<", segido por espacio)
+   5. La cadena se detuvo en el patron anterior, capturalo
+   6. Y para finalizar captura el resto de la cadena
+
+
+   el resultado serian cuatro capturas (| para resaltar margenes de captura)
+
+   #+BEGIN_EXAMPLE
+     |<<|
+     |abcde : fghi jklm|
+     |::|
+     |nrstu vwxy|
+   #+END_EXAMPLE
 
    #+BEGIN_SRC c
      regexp3( "1999-12-05", "<(\\d){2,4}(\\-|/)(\\d)*(\\W{1})(\\d+)>" );
@@ -675,7 +737,7 @@
        tracker       ruta uno
      #+END_EXAMPLE
 
-     en este punto cada nuevo =track= es evaluado (=isPath()=) en
+     en este punto cada nuevo =track= es evaluado por =isPath()= en
      busca de signos que indiquen la necesidad de seguir reduciendo la
      exprecion en rutas, metacaracteres, clases de caracteres, rangos,
      y repeticiones. De ser esto necesario, el trayecto se enviara a
@@ -743,9 +805,10 @@
      enum PTYPE { PATH, GROUP, HOOK, SIMPLE, BRACKET, RANGEAB, META, POINT, UTF8 };
 
      struct Path {
-       int   len;
        char *ptr;
-       enum   PTYPE type;
+       int   len;
+       int   neg;
+       enum  PTYPE type;
        int   loopsMin, loopsMax;
      };
    #+END_SRC
@@ -756,6 +819,8 @@
    comparacion directa.
 
    =ptr= y =len= indican el inicio y longitud de la exprecion.
+
+   =neg= indica negacion de exprecion
 
    =type= indica el tipo.
 
