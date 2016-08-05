@@ -10,7 +10,9 @@ static int strLen( char *s ){
     if( *p == 0 ) return p - s;
 }
 
-static void strCpy( char *s, char *t ){ while( (*s++ = *t++) ); }
+static void strCpy( char *s, char *t ){
+ while( (*s++ = *t++) );
+}
 
 static void strnCpy( char *s, char *t, int n ){
   while( n > 0 && (*s++ = *t++) ) n--;

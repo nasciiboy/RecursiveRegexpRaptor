@@ -17,10 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-int    regexp3 ( char *line      , char *exp );
-char * cpyCatch( char * lineCatch, int index );
-int    totCatch(                             );
-char * gpsCatch(                   int index );
-int    lenCatch(                   int index );
-char * replaceCatch( char * newLine, char * str, int index );
-char * newLineCatch( char * newLine, char * str );
+int    regexp3 ( char * txt, char *re );
+
+
+int    totCatch();
+char * gpsCatch( int index );
+int    lenCatch( int index );
+char * cpyCatch( char * str, int index );
+char * modCatch( char * newTxt, char * mStr );
+char * rplCatch( char * newTxt, char * rStr, int index );

@@ -1,10 +1,15 @@
 #include "regexp3.h"
 #include "charUtils.h"
 
-#define TRUE       1
-#define FALSE      0
-#define INF    65536
-#define CATCHS    24
+#define TRUE                  1
+#define FALSE                 0
+#define CATCHS               24
+#define INF               65536
+
+#define MOD_ALPHA             1
+#define MOD_OMEGA             2
+#define MOD_LONLEY            4
+#define MOD_NEGATION          8
 
 struct CATch {
   char *ptr[CATCHS];
@@ -14,222 +19,123 @@ struct CATch {
   int   index;
 } Catch;
 
-struct PathLine {
-  char *line;
+struct TEXT {
+  char *ptr;
   int   pos;
   int   len;
 };
 
-enum PTYPE { PATH, HOOK, GROUP, SIMPLE, BRACKET, RANGEAB, META, POINT, UTF8 };
+enum TYPE { SIMPLE, PATH, HOOK, GROUP, BRACKET, RANGEAB, META, POINT, UTF8 };
 
-struct Path {
-  char *ptr;
-  int   len;
-  int   neg;
-  enum  PTYPE type;
-  int   loopsMin, loopsMax;
+struct RE {
+  char          *ptr;
+  int            len;
+  enum     TYPE  type;
+  unsigned char  mods;
+  unsigned int   loopsMin, loopsMax;
 };
 
-static int   walker      ( struct Path   path,   struct PathLine *pathLine              );
-static int   cutTrack    ( struct Path  *path,   struct Path     *track,     int type   );
-static int   trekking    ( struct Path  *path,   struct PathLine *pathLine              );
-static int   tracker     ( struct Path  *path,   struct Path     *track                 );
-static int   walkMeta    (                              char     *str                   );
-static int   walkBracket (                              char     *str                   );
-static int   isPath      ( struct Path *track                                           );
-static void  setLoops    ( struct Path *track,   struct Path     *path                  );
-static void  openCatch   ( struct Path *track,   struct PathLine *pathLine,  int *index );
-static void  closeCatch  ( struct Path *track,   struct PathLine *pathLine,  int  index );
-static void  delCatch    ( struct Path *track,                               int  index );
-static int   match       ( struct Path *text,    struct PathLine *pathLine              );
-static int   matchBracket( struct Path *text,    struct PathLine *pathLine              );
-static int   matchMeta   ( struct Path *text,           char     *line                  );
-static int   matchText   ( struct Path *text,           char     *line                  );
-
-int regexp3( char *line, char *exp ){
-  struct Path     path;
-  struct PathLine pathLine;
-  int lonleyWalk  = FALSE;
-  int atTheEnd    = FALSE;
-  int result      = 0;
-  int loops       = strLen( line );
-  path.ptr        = exp;
-  path.len        = strLen( exp );
-  path.type       = PATH;
-  Catch.index     = 1;
-  Catch.ptr[0]    = line;
-  Catch.len[0]    = loops;
-
-  if( loops == 0 || path.len == 0 ) return 0;
-
-  if( *(exp + path.len - 1) == '$' ){
-    atTheEnd = TRUE;
-    path.len--;
-  }
-
-  if( *path.ptr == '^' ){
-    loops = 1;
-    path.ptr++;
-    path.len--;
-  }
-
-  if( *path.ptr == '?' ){
-    lonleyWalk = TRUE;
-    path.ptr++;
-    path.len--;
-  }
-
-  for( int i = 0, hit; i < loops; i += hit && pathLine.pos ? pathLine.pos : utf8meter( line + i ) ){
-    hit           = 0;
-    Catch.idx     = 1;
-    pathLine.pos  = 0;
-    pathLine.line = line + i;
-    pathLine.len  = Catch.len[0] - i;
-
-    if( atTheEnd ){
-      if( walker( path, &pathLine ) && pathLine.pos == pathLine.len ) return TRUE;
-    } else if( (hit = walker( path, &pathLine ))    && lonleyWalk   ) return TRUE;
-    else result += hit;
-  }
-
-  return result;
+static void openCatch( struct RE *rexp, struct TEXT *text, int *index ){
+  if( rexp->type == HOOK && Catch.index < CATCHS ){
+    *index = Catch.index++;
+    Catch.ptr[ *index ] = text->ptr + text->pos;
+    Catch.len[ *index ] = 0;
+    Catch.id [ *index ] = Catch.idx++;
+  } else *index = CATCHS;
 }
 
-static int walker( struct Path path, struct PathLine *pathLine ){
-  struct Path track;
-  while( cutTrack( &path, &track, PATH ) )
-    if( track.len && trekking( &track, pathLine ) ) return TRUE;
-
-  return FALSE;
+static void closeCatch( struct RE *rexp, struct TEXT *text, int index ){
+  if( rexp->type == HOOK && index < CATCHS )
+    Catch.len[ index ] = &text->ptr[ text->pos ] - Catch.ptr[ index ];
 }
 
-static int cutTrack( struct Path *path, struct Path *track, int type ){
-  track->ptr  = path->ptr + (type == PATH ? 0 : 1);
-  track->len  = path->len;
-  track->type = path->type;
+static void delCatch( struct RE *rexp, int index ){
+  if( rexp->type == HOOK && index < CATCHS ){
+    Catch.index = index;
+    Catch.ptr[ index ] = 0;
+    Catch.len[ index ] = 0;
+    Catch.idx = Catch.id[ index ];
+  }
+}
 
-  for( int cut, i = 0, deep = 0; i < path->len; i++ ){
-    i += walkMeta   ( path->ptr + i );
-    i += walkBracket( path->ptr + i );
+int totCatch(){ return Catch.index - 1; }
 
-    switch( path->ptr[i] ){
-    case '<': case '(': deep++; break;
-    case '>': case ')': deep--; break;
+char * cpyCatch( char * str, int index ){
+  if( index > 0 && index < Catch.index )
+    strnCpy( str, Catch.ptr[ index ], Catch.len[ index ] );
+  else *str = '\0';
+
+  return str;
+}
+
+char * rplCatch( char * newTxt, char * rStr, int index ){
+  char *origin = newTxt, *line = Catch.ptr[ 0 ];
+  strCpy( origin, Catch.ptr[0] );
+
+  for( int iCatch = 1; iCatch < Catch.index; iCatch++ )
+    if( Catch.id[ iCatch ] == index ){
+      strCpy( newTxt, line );
+      newTxt += Catch.ptr[ iCatch ] - line;
+      strCpy( newTxt, rStr );
+      newTxt += strLen( rStr );
+      line    = Catch.ptr[ iCatch ] + Catch.len[ iCatch ];
+      strCpy( newTxt, line );
     }
 
-    switch( type ){
-    case HOOK    : cut = deep == 0; break;
-    case GROUP   : cut = deep == 0; break;
-    case PATH    : cut = deep == 0 && path->ptr[i] == '|'; break;
-    case BRACKET : cut = path->ptr[i] == ']'; break;
+  return origin;
+}
+
+char * modCatch( char * newTxt, char * mStr ){
+  char index, *pos, *origin = newTxt;
+  strCpy( origin, mStr );
+
+  while( (pos = strChr( mStr, '\\' )) ){
+    if( pos[ 1 ] == '\\' ){
+      newTxt += pos + 1 - mStr;
+      mStr    = pos + 2;
+    } else {
+      index = aToi( pos + 1 );
+      strCpy( newTxt, mStr );
+      newTxt += pos - mStr;
+      newTxt  = cpyCatch( newTxt, index );
+      newTxt += strLen( newTxt );
+      mStr    = pos + 1 + countDigits( index );
     }
 
-    if( cut && i < path->len){
-      track->len  = &path->ptr[i] - track->ptr;
-      path->ptr  += i + 1;
-      path->len  -= i + 1;
-      track->type = type;
-      return TRUE;
-    }
+    strCpy( newTxt, mStr );
   }
 
-  path->ptr += path->len;
-  path->len = 0;
-
-  return track->len ? TRUE : FALSE;
+  return origin;
 }
 
-static int trekking( struct Path *path, struct PathLine *pathLine ){
-  struct Path track;
-  int iCatch, loops, steps, oPos = pathLine->pos;
+char * gpsCatch( int index ){
+  return ( index > 0 && index < Catch.index ) ? Catch.ptr[ index ] : 0;
+}
 
-  while( tracker( path, &track ) ){
-    openCatch( &track, pathLine, &iCatch );
+int lenCatch( int index ){
+  return ( index > 0 && index < Catch.index ) ? Catch.len[ index ] : 0;
+}
 
-    if( isPath( &track ) ){
-      if( track.neg ){
-        for( loops = 0, steps = pathLine->pos; loops < track.loopsMax && !walker( track, pathLine ); ){
-          steps += utf8meter( pathLine->line + steps );
-          pathLine->pos = steps;
-          loops++;
+static void fwrTrack( struct RE *track, int len ){
+  track->ptr += len; track->len -= len;
+}
+
+static void setMods( struct RE *path, struct RE *rexp ){
+  int len = 0, ok = TRUE;
+  rexp->mods = 0;
+
+  if( path->len )
+    if( *path->ptr == '#' )
+      while( ok )
+        switch( path->ptr[ ++len ] ){
+        case '^': rexp->mods |= MOD_ALPHA   ; break;
+        case '$': rexp->mods |= MOD_OMEGA   ; break;
+        case '!': rexp->mods |= MOD_NEGATION; break;
+        case '?': rexp->mods |= MOD_LONLEY  ; break;
+        default : ok          = FALSE       ; break;
         }
 
-        pathLine->pos = steps;
-      } else
-        for( loops = 0; loops < track.loopsMax && walker( track, pathLine ); )
-          loops++;
-    } else if( track.neg )
-      for( loops = 0; loops < track.loopsMax && pathLine->pos < pathLine->len && !match( &track, pathLine ); ){
-        pathLine->pos += utf8meter( pathLine->line + pathLine->pos  );
-        loops++;
-      }
-    else
-      for( loops = 0; loops < track.loopsMax && pathLine->pos < pathLine->len
-                                             && (steps = match( &track, pathLine )); ){
-        pathLine->pos += steps;
-        loops++;
-      }
-
-    if( loops < track.loopsMin ){
-      pathLine->pos = oPos;
-      delCatch( &track, iCatch );
-      return FALSE;
-    } else closeCatch( &track, pathLine, iCatch );
-  }
-
-  return TRUE;
-}
-
-
-static void trackByLen( struct Path *path, struct Path *track, int len, int type ){
-  track->ptr   = path->ptr;
-  track->type  = type;
-  track->len   = len;
-  path->ptr   += len;
-  path->len   -= len;
-}
-
-static char * trackerPoint( char *ct, int len ){
-  for( int i = 0; i < len && ct[ i ]; i++ )
-    if( strChr( "(<[.?+*{-\\!", ct[ i ] ) || ct[ i ] & xooooooo ) return ct + i;
-
-  return 0;
-}
-
-static int tracker( struct Path *path, struct Path *track ){
-  if( *path->ptr == '!' ){
-      track->neg = TRUE;
-      path->len--; path->ptr++;
-  } else track->neg = FALSE;
-
-  if( path->len ){
-    char *point;
-
-    switch( *path->ptr & xooooooo ? UTF8 : *path->ptr ){
-    case '\\': trackByLen( path, track,                    2, META    ); break;
-    case '.' : trackByLen( path, track,                    1, POINT   ); break;
-    case '(' : cutTrack  ( path, track,                       GROUP   ); break;
-    case '<' : cutTrack  ( path, track,                       HOOK    ); break;
-    case '[' : cutTrack  ( path, track,                       BRACKET ); break;
-    case UTF8: trackByLen( path, track, utf8meter(path->ptr), UTF8    ); break;
-    default:
-      if( (point = trackerPoint( path->ptr + 1, path->len - 1 )) ){
-        switch( *point ){
-        default: trackByLen( path, track, point - path->ptr, SIMPLE  ); break;
-        case '?': case '+': case '*': case '{': case '-':
-          if( point - path->ptr == 1 ){
-            if( *point == '-' ) trackByLen( path, track, 3, RANGEAB );
-            else                trackByLen( path, track, 1, SIMPLE  );
-          } else trackByLen( path, track, (point - path->ptr) - 1, SIMPLE  );
-        }
-      } else trackByLen( path, track, path->len, SIMPLE  );
-    }
-
-    setLoops( track, path );
-    return TRUE;
-  }
-
-  return FALSE;
+  fwrTrack( path, len );
 }
 
 static int walkMeta( char *str ){
@@ -244,152 +150,142 @@ static int walkBracket( char *str ){
   } else return 0;
 }
 
-static int isPath( struct Path *track ){
-  switch( track->type ){
+static void setLoops( struct RE *rexp, struct RE *track ){
+  track->loopsMin = 1; track->loopsMax = 1;
+  int len = 0;
+
+  if( rexp->len )
+    switch( *rexp->ptr ){
+    case '?' : len = 1; track->loopsMin = 0; track->loopsMax =   1; break;
+    case '+' : len = 1; track->loopsMin = 1; track->loopsMax = INF; break;
+    case '*' : len = 1; track->loopsMin = 0; track->loopsMax = INF; break;
+    case '{' :
+      track->loopsMin = aToi( rexp->ptr + 1 ) ;
+      if( rexp->ptr[ 1 + countDigits( track->loopsMin ) ] == ',' )
+        track->loopsMax = aToi( strChr( rexp->ptr, ',' ) + 1 );
+      else
+        track->loopsMax = track->loopsMin;
+
+      len = strChr( rexp->ptr, '}' ) - rexp->ptr + 1;
+    }
+
+  fwrTrack( rexp, len );
+}
+
+static int cutTrack( struct RE *rexp, struct RE *track, int type ){
+  track->ptr  = rexp->ptr + (type == PATH ? 0 : 1);
+  track->len  = rexp->len;
+  track->type = rexp->type;
+
+  for( int cut, i = 0, deep = 0; i < rexp->len; i++ ){
+    i += walkMeta   ( rexp->ptr + i );
+    i += walkBracket( rexp->ptr + i );
+
+    switch( rexp->ptr[i] ){
+    case '<': case '(': deep++; break;
+    case '>': case ')': deep--; break;
+    }
+
+    switch( type ){
+    case HOOK    : cut = deep == 0; break;
+    case GROUP   : cut = deep == 0; break;
+    case PATH    : cut = deep == 0 && rexp->ptr[i] == '|'; break;
+    case BRACKET : cut = rexp->ptr[i] == ']'; break;
+    }
+
+    if( cut && i < rexp->len){
+      track->len  = &rexp->ptr[i] - track->ptr;
+      track->type = type;
+      fwrTrack( rexp, i + 1 );
+      return TRUE;
+    }
+  }
+
+  fwrTrack( rexp, rexp->len );
+
+  return track->len ? TRUE : FALSE;
+}
+
+static int isPath( struct RE *rexp ){
+  switch( rexp->type ){
   case PATH: case HOOK: case GROUP:
-    for( int i = 0; i < track->len; i++ )
-      if( strChr( "|(<[.?+*{-\\!", track->ptr[i] ) )
+    for( int i = 0; i < rexp->len; i++ )
+      if( strChr( "|(<[.?+*{-\\#", rexp->ptr[i] ) )
         return TRUE;
   default: return FALSE;
   }
 }
 
-static void setLoops( struct Path *track, struct Path *path ){
-  track->loopsMin = 1; track->loopsMax = 1;
-  int len = 0;
+static void trackByLen( struct RE *path, struct RE *track, int len, int type ){
+  track->ptr   = path->ptr;
+  track->type  = type;
+  track->len   = len;
+  fwrTrack( path, len );
+}
 
-  if( path->len )
-    switch( *path->ptr ){
-    case '?' : len = 1; track->loopsMin = 0; track->loopsMax =   1; break;
-    case '+' : len = 1; track->loopsMin = 1; track->loopsMax = INF; break;
-    case '*' : len = 1; track->loopsMin = 0; track->loopsMax = INF; break;
-    case '{' :
-      track->loopsMin = aToi( path->ptr + 1 ) ;
-      if( path->ptr[ 1 + countDigits( track->loopsMin ) ] == ',' )
-        track->loopsMax = aToi( strChr( path->ptr, ',' ) + 1 );
-      else
-        track->loopsMax = track->loopsMin;
+static char * trackerPoint( char *ct, int len ){
+  for( int i = 0; i < len && ct[ i ]; i++ )
+    if( strChr( "(<[.?+*{-\\#", ct[ i ] ) || ct[ i ] & xooooooo ) return ct + i;
 
-      len = strChr( path->ptr, '}' ) - path->ptr + 1;
+  return 0;
+}
+
+static int tracker( struct RE *rexp, struct RE *track ){
+  setMods( rexp, track );
+
+  if( rexp->len ){
+    char *point;
+
+    switch( *rexp->ptr & xooooooo ? UTF8 : *rexp->ptr ){
+    case '\\': trackByLen( rexp, track,                    2, META    ); break;
+    case '.' : trackByLen( rexp, track,                    1, POINT   ); break;
+    case '(' : cutTrack  ( rexp, track,                       GROUP   ); break;
+    case '<' : cutTrack  ( rexp, track,                       HOOK    ); break;
+    case '[' : cutTrack  ( rexp, track,                       BRACKET ); break;
+    case UTF8: trackByLen( rexp, track, utf8meter(rexp->ptr), UTF8    ); break;
+    default:
+      if( (point = trackerPoint( rexp->ptr + 1, rexp->len - 1 )) ){
+        switch( *point ){
+        default: trackByLen( rexp, track, point - rexp->ptr, SIMPLE  ); break;
+        case '?': case '+': case '*': case '{': case '-':
+          if( point - rexp->ptr == 1 ){
+            if( *point == '-' ) trackByLen( rexp, track, 3, RANGEAB );
+            else                trackByLen( rexp, track, 1, SIMPLE  );
+          } else trackByLen( rexp, track, (point - rexp->ptr) - 1, SIMPLE  );
+        }
+      } else trackByLen( rexp, track, rexp->len, SIMPLE  );
     }
 
-  path->ptr += len;
-  path->len -= len;
-}
-
-static void openCatch( struct Path *track, struct PathLine *pathLine, int *index ){
-  if( track->type == HOOK && Catch.index < CATCHS ){
-    *index = Catch.index++;
-    Catch.ptr[ *index ] = pathLine->line + pathLine->pos;
-    Catch.len[ *index ] = 0;
-    Catch.id [ *index ] = Catch.idx++;
-  } else *index = CATCHS;
-}
-
-static void closeCatch( struct Path *track, struct PathLine *pathLine, int index ){
-  if( track->type == HOOK && index < CATCHS )
-    Catch.len[ index ] = &pathLine->line[ pathLine->pos ] - Catch.ptr[ index ];
-}
-
-static void delCatch( struct Path *track, int index ){
-  if( track->type == HOOK && index < CATCHS ){
-    Catch.index = index;
-    Catch.ptr[ index ] = 0;
-    Catch.len[ index ] = 0;
-    Catch.idx = Catch.id[ index ];
-  }
-}
-
-int totCatch(){ return Catch.index - 1; }
-
-char * cpyCatch( char * lineCatch, int index ){
-  if( index > 0 && index < Catch.index )
-    strnCpy( lineCatch, Catch.ptr[ index ], Catch.len[ index ] );
-  else *lineCatch = '\0';
-
-  return lineCatch;
-}
-
-char * replaceCatch( char * newLine, char * str, int index ){
-  char *origin = newLine, *line = Catch.ptr[ 0 ];
-  strCpy( origin, Catch.ptr[0] );
-
-  for( int iCatch = 1; iCatch < Catch.index; iCatch++ )
-    if( Catch.id[ iCatch ] == index ){
-      strCpy( newLine, line );
-      newLine += Catch.ptr[ iCatch ] - line;
-      strCpy( newLine, str );
-      newLine += strLen( str );
-      line =  Catch.ptr[ iCatch ] + Catch.len[ iCatch ];
-      strCpy( newLine, line );
-    }
-
-  return origin;
-}
-
-char * newLineCatch( char * newLine, char * str ){
-  char index, *pos, *origin = newLine;
-  strCpy( origin, str );
-
-  while( (pos = strChr( str, '\\' )) ){
-    if( pos[ 1 ] == '\\' ){
-      newLine += pos + 1 - str;
-      str      = pos + 2;
-    } else {
-      index = aToi( pos + 1 );
-      strCpy( newLine, str );
-      newLine += pos - str;
-      newLine  = cpyCatch( newLine, index );
-      newLine += strLen( newLine );
-      str      = pos + 1 + countDigits( index );
-    }
-
-    strCpy( newLine, str );
+    setLoops( rexp, track );
+    return TRUE;
   }
 
-  return origin;
+  return FALSE;
 }
 
-char * gpsCatch( int index ){
-  return ( index > 0 && index < Catch.index ) ? Catch.ptr[ index ] : 0;
-}
+static int match( struct RE *rexp, struct TEXT *text );
 
-int lenCatch( int index ){
-  return ( index > 0 && index < Catch.index ) ? Catch.len[ index ] : 0;
-}
-
-static int match( struct Path *text, struct PathLine *pathLine ){
-  switch( text->type ){
-  case POINT  : return utf8meter( pathLine->line + pathLine->pos );
-  case RANGEAB: return pathLine->line[ pathLine->pos ] >= text->ptr[ 0 ] &&
-                       pathLine->line[ pathLine->pos ] <= text->ptr[ 2 ];
-  case BRACKET: return matchBracket( text, pathLine );
-  case META   : return matchMeta( text, pathLine->line + pathLine->pos );
-  default     : return matchText( text, pathLine->line + pathLine->pos );
-  }
-}
-
-static int matchBracket( struct Path *text, struct PathLine *pathLine ){
-  struct Path track, path = *text;
+static int matchBracket( struct RE *rexp, struct TEXT *text ){
+  struct RE track, path = *rexp;
   int result  = 0;
-  int reverse = *text->ptr == '^';
-  if( reverse ){ path.len--; path.ptr++; }
+  int reverse = *rexp->ptr == '^';
+  if( reverse ) fwrTrack( &path, 1 );
   while( tracker( &path, &track ) ){
     switch( track.type ){
     case POINT: case RANGEAB: case META: case UTF8:
-      result = match( &track, pathLine ); break;
+      result = match( &track, text ); break;
     default:
-      result = strnChr( track.ptr, pathLine->line[pathLine->pos], track.len  ) != 0;
+      result = strnChr( track.ptr, text->ptr[text->pos], track.len  ) != 0;
     }
 
     if( result ) return reverse ? FALSE : result;
   }
 
-  return reverse ? utf8meter( pathLine->line + pathLine->pos ) : FALSE;
+  return reverse ? utf8meter( text->ptr + text->pos ) : FALSE;
 }
 
-static int matchMeta( struct Path *text, char *line ){
-  switch( text->ptr[1] ){
+static int matchMeta( struct RE *rexp, char *line ){
+  switch( rexp->ptr[1] ){
   case 'd' : return isDigit(*line);
   case 'D' : return isDigit(*line) == 0 ? utf8meter( line ) : FALSE;
   case 'w' : return isAlnum(*line);
@@ -397,10 +293,120 @@ static int matchMeta( struct Path *text, char *line ){
   case 's' : return isSpace(*line);
   case 'S' : return isSpace(*line) == 0 ? utf8meter( line ) : FALSE;
   case '&' : return *line  &  xooooooo  ? utf8meter( line ) : FALSE;
-  default  : return *line == text->ptr[1];
+  default  : return *line == rexp->ptr[1];
   }
 }
 
-static int matchText( struct Path *text, char *line ){
-  return strnCmp( line, text->ptr, text->len )  == 0 ? text->len : 0;
+static int matchText( struct RE *rexp, char *line ){
+  return strnCmp( line, rexp->ptr, rexp->len )  == 0 ? rexp->len : 0;
+}
+
+static int match( struct RE *rexp, struct TEXT *text ){
+  switch( rexp->type ){
+  case POINT  : return utf8meter( text->ptr + text->pos );
+  case RANGEAB: return text->ptr[ text->pos ] >= rexp->ptr[ 0 ] &&
+                       text->ptr[ text->pos ] <= rexp->ptr[ 2 ];
+  case BRACKET: return matchBracket( rexp, text );
+  case META   : return matchMeta( rexp, text->ptr + text->pos );
+  default     : return matchText( rexp, text->ptr + text->pos );
+  }
+}
+
+static int walker( struct RE rexp, struct TEXT *text );
+
+static int trueLoop( struct RE *track, struct TEXT *text ){
+  int steps, loops = 0;
+
+  if( isPath( track ) )
+    while( loops < track->loopsMax && walker( *track, text ) )
+      loops++;
+  else
+    while( loops < track->loopsMax && text->pos < text->len
+                    && (steps = match( track, text )) ){
+      text->pos += steps;
+      loops++;
+    }
+
+  return loops < track->loopsMin ? FALSE : TRUE;
+}
+
+static int negLoop( struct RE *track, struct TEXT *text ){
+  int steps = text->pos, loops = 0;
+
+  if( isPath( track ) ){
+    while( loops < track->loopsMax && !walker( *track, text ) ){
+      steps += utf8meter( text->ptr + steps );
+      text->pos = steps;
+      loops++;
+    }
+
+    text->pos = steps;
+  } else
+    while( loops < track->loopsMax && text->pos < text->len && !match( track, text ) ){
+      text->pos += utf8meter( text->ptr + text->pos  );
+      loops++;
+    }
+
+  return loops < track->loopsMin ? FALSE : TRUE;
+}
+
+static int trekking( struct RE *rexp, struct TEXT *text ){
+  struct RE track;
+  int iCatch, oPos = text->pos;
+
+  while( tracker( rexp, &track ) ){
+    openCatch( &track, text, &iCatch );
+
+    if( track.mods & MOD_NEGATION ? negLoop( &track, text ) : trueLoop( &track, text ) )
+      closeCatch( &track, text, iCatch );
+    else {
+      text->pos = oPos;
+      delCatch( &track, iCatch );
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+static int walker( struct RE rexp, struct TEXT *text ){
+  struct RE track;
+  while( cutTrack( &rexp, &track, PATH ) )
+    if( track.len && trekking( &track, text ) ) return TRUE;
+
+  return FALSE;
+}
+
+int regexp3( char *txt, char *re ){
+  struct RE     rexp;
+  struct TEXT   text;
+  int result    = 0;
+  int loops     = strLen( txt );
+  rexp.len      = strLen( re );
+  rexp.type     = PATH;
+  rexp.ptr      = re;
+  Catch.index   = 1;
+  Catch.ptr[0]  = txt;
+  Catch.len[0]  = loops;
+
+  if( loops == 0 || rexp.len == 0 ) return 0;
+
+  setMods( &rexp, &rexp );
+
+  if( rexp.mods & MOD_ALPHA ) loops = 1;
+
+  for( int i = 0, hit; i < loops; i += hit && text.pos ? text.pos : utf8meter( txt + i ) ){
+    hit       = 0;
+    Catch.idx = 1;
+    text.pos  = 0;
+    text.ptr  = txt + i;
+    text.len  = Catch.len[0] - i;
+
+    if( rexp.mods & MOD_OMEGA ){
+      if( walker( rexp, &text ) && text.pos == text.len ) return TRUE;
+    } else if( (hit = walker( rexp, &text )) && rexp.mods & MOD_LONLEY  ) return TRUE;
+    else result += hit;
+  }
+
+  return result;
 }
