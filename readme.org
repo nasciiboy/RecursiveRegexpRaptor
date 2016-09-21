@@ -1,406 +1,447 @@
 #+TITLE:    Recursive Regexp Raptor (regexp3)
 #+AUTHOR:   nasciiboy
-#+LANGUAGE: es
+#+LANGUAGE: en
 #+STARTUP:  showall
 
+#+TITLE:    Recursive Regexp Raptor (regexp3)
+#+AUTHOR:   nasciiboy
+#+LANGUAGE: en
+#+STARTUP:  showall
 
-* Caracteristicas
+lang: [[file:readme_es.org][es]]
 
-  - Manejo sencillo,
+* Characteristics
 
-  - Sin verificacion de errores en la exprecion resivida. C no es asi.
+  - Easy to use.
 
-  - Numero de rutas y agrupamientos limitado solo por la capacidad del
-    sistema/hardware
+  - No error checking.
 
-  - El codigo mas compacto y claro que alla precenciado nunca antes
-    alguna libreria regexp humana.
+  - The most compact and clear code in a human regexp library.
 
-  - Cero dependencias. Ni la libreria estandar de C esta
-    precente *C PURO*.
+  - Zero dependencies. Neither the standard C library is present *PURE* C.
 
-  - Soporte UTF8 (2-6 bytes) (experimental)
+  - No explicit dynamic memory management. No =malloc=, =calloc=, =free=, ...
 
-  - Manejo no explicito de memoria dinamica. No encontrara ningun
-    =malloc=, =calloc=, =free=, ...
+  - Count matches
 
-  - Recuperacion de capturas de forma individual
+  - Catchs
 
-  - Reemplazo de capturas
+  - Replacement catch
 
-  - Creacion de una nueva linea agregando capturas
+  - Placement of specific catches within an array
 
-  - Negacion de expreciones (experimental)
+  - Denial of expreciones (experimental)
 
-* Introduccion
+  - Backreferences
 
-  *Recurseve Regexp Raptor* es una libreria de busqueda, captura y
-  reemplazo de expresiones regulares escrita en lenguaje C, buscando
-  lo siguiente:
+  - Support UTF8 (2-6 bytes)
 
-  - Cumplir con la mayoria de funciones esperadas por una libreria de
-    este tipo.
+* Introduction
 
-  - Codigo elegante: sencillo, claro y dotado de gracia.
+  *Recurseve Regexp Raptor* is a library search, capture and replacement
+  Regular expressions written in C language from zero, trying to achieve what
+  following:
 
-  - Evitar peticion explicita de memoria dinamica.
+  - Having most of the features present in any other regexp library.
 
-  - Ser util como material de aprendizaje.
+  - Elegant Code: simple, clear and endowed with grace.
+
+  - Avoid explicit request dynamic memory.
+
+  - Avoid using any external libraries, including the standard library.
+
+  - Be a useful learning material.
 
 ** Motivacion
 
-   Partiendo de que C no dispone de una libreria estandar de
-   expresiones regulares, se planteo la busqueda de una opcion
-   funcional de la cual aprender un poco, GNU tiene tanto gawk como la
-   libreria regexp, sin embargo el autor de este trabajo (que igual y
-   es un poco retard) encontro en ambas codigo rebuscado y mistico
-   repartido en varios ficheros, llenos de macros y variables
-   cripticas.
+   C does not have a standard library of regular expressions, although there are
+   several implementations, such as pcre, the regexp.h library of the GNU
+   project, regexp of the Plan 9 operating system, and some other more, the
+   author of this work (which is a little bit retard) found in all code
+   farfetched and mystical divided into several files full of macros, scripts
+   low and cryptic variables. Unable to understand anything and after a retreat
+   to the island of onanista meditacion the author intended to make your own
+   library with casinos and Japanese schoolgirls.
 
-   La siguiente opcion fue la libreria [[https://github.com/cesanta/slre][slre]] cuya principal
-   cararacteristica es tener codigo compacto, aunque no mas claro,
-   luego de algunos dias descifrando el codigo se descubrio que el
-   algoritmo utilizado no era general, cuando la exprecion tenia mas
-   de un bloque de anidamiento el resultado siempre es incorrecto es
-   decir:
+** Development and Testing
 
-   #+BEGIN_EXAMPLE
-     (((a|b)))((x|b))
-     = 1 =====        OK
-              = 2 === ERROR
-   #+END_EXAMPLE
+   Has been used GNU Emacs (the only true operating system), clang compiler
+   (LLVM) 3.8.0, konsole and fish, running in Freidora 24.
 
-   desepcionado y tras un retiro a la isla de la meditacion onanista
-   el autor se propuso hacer su propia libreria con casinos y
-   colegialas japonesas.
+   - *NOTE* :: in fedora 24 with gcc 6.1.1 two strangers errors occur in the
+               =ascii_test.c= test file, lines 180 and 181.
 
-** Desarrollo y pruebas
+   There are two tests for the library, the first ascii test battery is used in
+   the file =ascii_test.c=.
 
-   Se ha echo uso del "editor" GNU Emacs y el compilador gcc version
-   5.3.1, corriendo en fedora 23.
-
-   para compilar solo hace falta
+   to test the ascii library
 
    #+BEGIN_SRC sh
-     gcc test.c regexp3.c
+     gcc ascii_test.c regexp3_ascii.c
    #+END_SRC
 
-   para la ejecucion basta un confiable
+   to the ut8 vercion
+
+   #+BEGIN_SRC sh
+     gcc ascii_test.c regexp3_utf8.c
+   #+END_SRC
+
+   the second battery of tests is exclusive of =regexp3_utf8.c=
+
+   #+BEGIN_SRC sh
+     gcc utf8_test.c regexp3_utf8.c
+   #+END_SRC
+
+   in either case run with
 
    #+BEGIN_SRC sh
      ./a.out
    #+END_SRC
 
-* Uso
+* Use
 
-  Para incluir Recursive Regexp Raptor en su codigo necesita colocar
-  los ficheros =regexp3.c=, =regexp3.h= y =charUtils.h= dentro de la
-  carpeta de su proyecto. Luego incluir el encabezado
+  To include Recursive Regexp Raptor in their code, place the files =regexp3.h=,
+  =charUtils= and =regexp3_ascii.c= or =regexp3_utf8.c= inside the folder of
+  your draft. You must include the header
 
   #+BEGIN_SRC c
     #include "regexp3.h"
   #+END_SRC
 
-  donde desee utilizar la libreria, y finalmente agregar =regexp3.c=
-  al comando de compilacion
+  and finally compile well with
 
   #+BEGIN_SRC sh
-    gcc miProyecto.c regexp3.c
+    gcc myProyect.c regexp3_ascii.c
   #+END_SRC
 
-  La unica funcion de busqueda es =regexp3= aqui su prototipo:
+  or
 
-  #+BEGIN_SRC c
-    int regexp3( char *txt, char *re );
+  #+BEGIN_SRC sh
+    gcc myProyect.c regexp3_utf8.c
   #+END_SRC
 
-  - txt  :: apuntador a cadena sobre la que efectuar la busqueda, debe
-            finalizar con el signo de terminacion '\0'.
+  obviously compile with optimization provides a significant decline,
+  runtime, try =-O3=
 
-  - re   :: apuntador a cadena que contiene la expresion regular de
-            busqueda, debe finalizar con el signo de terminacion '\0'.
+** The =regexp3()= function
+
+   This the the only search function, its prototype is:
+
+   #+BEGIN_SRC c
+     int regexp3( char *txt, char *re );
+   #+END_SRC
+
+   - txt :: pointer to string on which to perform the search, must end with the
+            sign of termination '\0'.
+
+   - re :: pointer to string containing the regular expression search, You must
+           end with the sign of termination '\0'.
 
 
-  La funcion regresa el numero de coincidencias localizadas dentro del
-  argumento =txt= es decir de =0= (ninguna) a =n= coincidencias.
+   The function returns the number of matches =0= (none) o =n=
+   matches.
 
-  Recursive Regexp Raptor, varia levemente en la forma en como se modifica el
-  comportamiento de la expresion, hace uso de /modificadores/, estos
-  anteceden a la exprecion o seccion de esta, con la sintaxis
+   The standard syntax for regular expressions using the character '\',
+   unfortunately this sign goes into "conflict" with the syntax of C, by this
+   and trying to keep simple the code, has opted for a alternate syntax detailed
+   below
 
-  #+BEGIN_SRC c
-    #modificador
-  #+END_SRC
+** Syntax
 
-  donde '#' indica la modificacion del comportamiento y "modificador" es uno
-  o una combinacion de cuatro signos '^', '$', '?' y '!', los primeros 3
-  afectan de forma /global/ a la expresion y solo tienen efecto si el
-  modificador antecede cualquier exprecion como en:
-
-  #+BEGIN_SRC c
-    regexp3( "Raptor Test", "#^$Raptor Test" );
-    //                       ^
-    //                       |
-    //  MODIFICADOR GLOBAL  -+ ANTECEDE CUALQUIER EXPRESION
-    //  los modificaders son  ^$
-    //  la seccion de busqueda  Raptor Test
-  #+END_SRC
-
-  el modificador '!' indica «mientras la expresion no coincida con el siguente
-  caracter, sigue adelante» de momento es el unico modificador valido en
-  secciones de la expresion, quiza se agregen mas en un futuro, por ejemplo
-  para ignorar entre mayusculas o minusculas y demas, por ahora no ha sido
-  necesario. otro ejemplo para ilustrar el uso de modificadores
-
-  #+BEGIN_SRC c
-    regexp3( "Raptor Test", "#^Raptor #!Fest" );
-    //                       ^
-    //                       |
-    //  MODIFICADOR GLOBAL  -+
-    //  el modificador es     ^
-    //  primer seccion        >Raptor <
-    //  segunda seccion              >#!Fest<
-    //                                ^
-    //                                |
-    //  MODIFICADOR DE SECCION  ------+
-    //  el modificador es              !
-  #+END_SRC
-
-  aqui se dice: de forma global busca algo que inicie con "Raptor " y que no
-  continue con la palabra "Fest"
-
-** Caracteristicas soportadas
-
-   - busqueda de texto en cualquier ubicacion:
+   - Text search in any location:
 
      #+BEGIN_SRC c
        regexp3( "Raptor Test", "Raptor" );
      #+END_SRC
 
-   - busqueda posicional al inicio '#^exp'
-
-     #+BEGIN_SRC c
-       regexp3( "Raptor Test", "#^Raptor" );
-     #+END_SRC
-
-   - busqueda posicional al final '#$exp'
-
-     #+BEGIN_SRC c
-       regexp3( "Raptor Test", "#$Test" );
-     #+END_SRC
-
-   - busqueda posicional al inicio y final "#^$exp"
-
-     #+BEGIN_SRC c
-       regexp3( "Raptor Test", "#^$Raptor Test" );
-     #+END_SRC
-
-   - detener con la primer coincidencia "#?exp"
-
-     #+BEGIN_SRC c
-       regexp3( "Raptor Test", "#?Raptor Test" );
-     #+END_SRC
-
-   - opciones de busqueda multiples "exp1|exp2"
+   - Multiple search options "exp1|exp2"
 
      #+BEGIN_SRC c
        regexp3( "Raptor Test", "Dinosaur|T Rex|Raptor|Triceratops" );
      #+END_SRC
 
-   - Rango de caracteres "x-n"
-
-     #+BEGIN_SRC c
-       regexp3( "Raptor Test", "Ra-zptor" );
-     #+END_SRC
-
-     - NOTA :: Los rangos de caracteres pueden colocarse dentro de una
-               agrupacion, conjunto de caracteres y texto simple.
-
-     - NOTA :: Solo estan soportados rangos de caracteres ASCII
-
-
-   - Conjunto de caracteres "[abc]"
-
-     #+BEGIN_SRC c
-       regexp3( "Raptor Test", "R[uoiea]ptor" );
-     #+END_SRC
-
-     - NOTA :: Dentro de un conjunto de caracteres los siguientes
-               caracteres carecen de significado especial =[|)}= y
-               pueden incluire tal cual si necesidad de escapar el
-               caracter.
-
-       #+BEGIN_SRC c
-         regexp3( "$|)}^", "([$|)}^])+" );
-       #+END_SRC
-
-
-   - Rango(s) dentro de conjunto de caracteres "[x-n]"
-
-     #+BEGIN_SRC c
-       regexp3( "Raptor Test", "R[a-z]ptor" );
-     #+END_SRC
-
-   - inversion de conjunto de caracteres  "[^abc]"
-
-     #+BEGIN_SRC c
-       regexp3( "Raptor Test", "R[^uoie]ptor" );
-     #+END_SRC
-
-   - *negacion de exprecion* "#!exp"
-
-     El modificador de negacion ha de preceder la exprecion a /negar/ por
-     ejemplo si desea negar un conjunto de caracteres
-
-     #+BEGIN_EXAMPLE
-       #![abc]
-     #+END_EXAMPLE
-
-     para una agrupacion
-
-     #+BEGIN_EXAMPLE
-       #!(abc|def)
-     #+END_EXAMPLE
-
-     para texto
-
-     #+BEGIN_EXAMPLE
-       #!abc
-     #+END_EXAMPLE
-
-     combinacion
-
-     #+BEGIN_EXAMPLE
-       #!texto#![conjunto]#!(agrupacion)
-     #+END_EXAMPLE
-
-   - coincidencia con cualquier caracter '.'
+   - Matches any character '.'
 
      #+BEGIN_SRC c
        regexp3( "Raptor Test", "R.ptor" );
      #+END_SRC
 
-   - coincidencia cero o una ves '?'
+   - Zero or more coincidences '?'
 
      #+BEGIN_SRC c
        regexp3( "Raptor Test", "Ra?ptor" );
      #+END_SRC
 
-   - coincidencia una o mas veces '+'
+   - One or more coincidences  '+'
 
      #+BEGIN_SRC c
        regexp3( "Raaaptor Test", "Ra+ptor" );
      #+END_SRC
 
-   - coincidencia cero o mas veces '*'
+   - Match zero or more times '*'
 
      #+BEGIN_SRC c
        regexp3( "Raaaptor Test", "Ra*ptor" );
      #+END_SRC
 
-   - rango de coincidencias "{n1,n2}"
+   - Range of coincidences "{n1,n2}"
 
      #+BEGIN_SRC c
        regexp3( "Raaaptor Test", "Ra{0,100}ptor" );
      #+END_SRC
 
-   - numero de coincidencia especifico '{n1}'
+   - Number of specific matches '{n1}'
 
      #+BEGIN_SRC c
        regexp3( "Raptor Test", "Ra{1}ptor" );
      #+END_SRC
 
-   - caracter ascii en notacion octal "\ooo"
+   - Range of characters "x-n"
 
      #+BEGIN_SRC c
-       regexp3( "Raptor Test", "R\141ptor" );
+       regexp3( "Raptor Test", "Ra-zptor" );
      #+END_SRC
 
-   - caracter ascii en notacion hexadecimal "\xhh"
+     - NOTE :: The ranges are valid in any section of the regexp
+               (grouping, character set, catch, plain text).
 
-     #+BEGIN_SRC c
-       regexp3( "Raptor Test", "R\x61ptor" );
-     #+END_SRC
+     - NOTE :: ranges are supported only ASCII characters
 
-   - caracter unicode "\uhhhh"
+   - Sets.
 
-     #+BEGIN_SRC c
-       regexp3( "R△ptor Test", "R\u25B3ptor" );
-     #+END_SRC
+     - WARNING :: Character sets interpret all the signs Special used by the
+                  library (grouping, character set, repetition...)  escape such
+                  signs with ':'
 
-     o
+     - Character Set "[abc]"
+
+       #+BEGIN_SRC c
+         regexp3( "Raptor Test", "R[uoiea]ptor" );
+       #+END_SRC
+
+     - Range within a set of characters "[x-n]"
+
+       #+BEGIN_SRC c
+         regexp3( "Raptor Test", "R[a-z]ptor" );
+       #+END_SRC
+
+     - Investment character set "[^ abc]"
+
+       #+BEGIN_SRC c
+         regexp3( "Raptor Test", "R[^uoie]ptor" );
+       #+END_SRC
+
+   - UTF8 characters
 
      #+BEGIN_SRC c
        regexp3( "R△ptor Test", "R△ptor" );
      #+END_SRC
 
-     tambien
+     also
 
      #+BEGIN_SRC c
        regexp3( "R△ptor Test", "R[△]ptor" );
      #+END_SRC
 
-   - escape de caracter con significado especial "\\c"
-
-     los caracteres '|', '(', ')', '<', '>', '[', ']', '?', '+', '*',
-     '{', '}', '-' y '\' indican como debe procesarse la exprecion regular,
-     colocar alguno de estos caracteres tal cual, sin tener en cuenta
-     una correcta sintaxis dentro de la exprecion, puede generar bucles
-     infinitos al igual que errores por violacion de segmento.
-
-     anteceder cualquier caracter (excluyendo cadenas de escape propias
-     de C) con doble diagonal =\=, elimina (de tener) el significado
-     especial y permite buscar tal cual el caracter.
+   - Coinciding with a character that is a letter ":a"
 
      #+BEGIN_SRC c
-       regexp3( "|()<>[]?+*{}-\\", "<\\|\\(\\)\\<\\>\\[\\]\\?\\+\\*\\{\\}\\-\\\\>" );
+       regexp3( "R△ptor Test", "R:aptor" );
      #+END_SRC
 
-     o
+   - Coinciding with a character that is not a letter ":A"
 
      #+BEGIN_SRC c
-       regexp3( "Raptor Test", "\\R\\a\\p\\t\\o\\r\\ \\T\\es\\t" );
+       regexp3( "R△ptor Test", "R:Aptor" );
      #+END_SRC
 
-   - agrupacion "(exp)"
+   - Coinciding with a character that is a number ":d"
+
+     #+BEGIN_SRC c
+       regexp3( "R4ptor Test", "R:dptor" );
+     #+END_SRC
+
+   - Coinciding with a character other than a number ":D"
+
+     #+BEGIN_SRC c
+       regexp3( "Raptor Test", "R:Dptor" );
+     #+END_SRC
+
+   - Coinciding with an alphanumeric character ":w"
+
+     #+BEGIN_SRC c
+       regexp3( "Raptor Test", "R:wptor" );
+     #+END_SRC
+
+   - Coinciding with a non-alphanumeric character ":W"
+
+     #+BEGIN_SRC c
+       regexp3( "R△ptor Test", "R:Wptor" );
+     #+END_SRC
+
+   - Coinciding with a character that is a space ":s"
+
+     #+BEGIN_SRC c
+       regexp3( "R ptor Test", "R:sptor" );
+     #+END_SRC
+
+   - Coinciding with a character other than a space ":S"
+
+     #+BEGIN_SRC c
+       regexp3( "Raptor Test", "R:Sptor" );
+     #+END_SRC
+
+   - Coincidence with utf8 character ":&"
+
+     #+BEGIN_SRC c
+       regexp3( "R△ptor Test", "R:&ptor" );
+     #+END_SRC
+
+   - Escape character with special meaning ":character"
+
+     the characters '|', '(', ')', '<', '>', '[', ']', '?', '+', '*', '{', '}',
+     '-', '#' and '@' as a especial characters, placing one of these characters
+     as is, regardless one correct syntax within the exprecion, can generate
+     infinite loops and other errors.
+
+     #+BEGIN_SRC c
+       regexp3( ":#()|<>", ":::#:(:):|:<:>" );
+     #+END_SRC
+
+   - Grouping "(exp)"
 
      #+BEGIN_SRC c
        regexp3( "Raptor Test", "(Raptor)" );
      #+END_SRC
 
-   - agrupacion con captura "<exp>"
+   - Grouping with capture "<exp>"
 
      #+BEGIN_SRC c
        regexp3( "Raptor Test", "<Raptor>" );
      #+END_SRC
 
-** Comportamiento al recorrer el texto de busqueda
+   - Backreferences "@id"
 
-   Al localizar una coincidencia, la nueva busqueda inicia a partir
-   del final de dicha coincidencia en lugar del caracter siguiente al
-   inicio de la coincidencia. Si desea realizar una busqueda caracter
-   a caracter (incluyendo caracteres UTF-8 de longitud variable)
-   elimine el fragmento de codigo
+     the backreferences need one previously captured expression "<exp>", then the
+     number of capture is placed, preceded by '@'
 
-   #+BEGIN_SRC c
-     hit && hit && text.pos ? text.pos :
-   #+END_SRC
+     #+BEGIN_SRC c
+       regexp3( "ae_ea", "<a><e>_@2@1" )
+     #+END_SRC
 
-   dentro de la funcion =regexp3= en el fichero =regexp3.c=.
+   - *Denial of exprecion* "([^(exp)])" o "<[^(exp)]>"
 
-   Adicionalmente podria no estar interesado en utilizar la libreria
-   con caracteres no ASCII, para obtener una considerable mejora de
-   rendimiento serian necesarias algunas modificaciones menores como
-   eliminar todo el codigo referente a =UTF=, la funcion =utf8meter=,
-   y la constante =xooooooo=, asi como substituir la aparicion de
-   =utf8meter= por =1=, =++= o alguna expresion equivalente, donde sea
-   necesario.
+     this unconventional exprecion allows the equivalent in other libraries
+     to expreciones type
 
-** Capturas
+     #+BEGIN_SRC c
+       a.*b
+     #+END_SRC
 
-   Cualquier agrupacion "<exp>" exitosa, genera una captura del texto
-   localizado, dichas capturas se almacenan segun el orden de
-   aparicion y posicion dentro de la agrupacion por ejemplo:
+     ie "an 'a' followed by anything other than b, followed by b".
+     In this syntax serious
+
+     #+BEGIN_SRC c
+       regexp3( "a123456789b", "a([^(b)])*b" );
+     #+END_SRC
+
+     this syntax is provicional and not execta fault, do not take
+     really.
+
+   - Behavior modifiers
+
+     There are two types of modifiers. The first affects globally the exprecion
+     behaviour, the second affects specific sections. In either case, the syntax
+     is the same, the sign '#', followed by modifiers,
+
+     modifiers global reach is placed at the beginning, the whole
+     and are as follows exprecion
+
+     - Search only the beginning '#^exp'
+
+       #+BEGIN_SRC c
+         regexp3( "Raptor Test", "#^Raptor" );
+       #+END_SRC
+
+     - Search only at the end '#$exp'
+
+       #+BEGIN_SRC c
+         regexp3( "Raptor Test", "#$Test" );
+       #+END_SRC
+
+     - Search the beginning and end "#^$exp"
+
+       #+BEGIN_SRC c
+         regexp3( "Raptor Test", "#^$Raptor Test" );
+       #+END_SRC
+
+     - Stop with the first match "#?exp"
+
+       #+BEGIN_SRC c
+         regexp3( "Raptor Test", "#?Raptor Test" );
+       #+END_SRC
+
+     - Search for the string, character by character "#~"
+
+       By default, when a exprecion coincides with a region of
+       text search, the search continues from the end of that
+       coincidence to ignore this behavior, making the search
+       always be character by character this switch is used
+
+       #+BEGIN_SRC c
+         regexp3( "aaaaa", "#~a*" );
+       #+END_SRC
+
+       in this example, without modifying the result it would be a coincidence,
+       however with this switch continuous search immediately after returning
+       character representations of the following five matches.
+
+     - Ignore case sensitive "#*exp"
+
+       #+BEGIN_SRC c
+         regexp3( "Raptor Test", "#*RaPtOr TeSt" );
+       #+END_SRC
+
+
+     all of the above switches are compatible with each other ie could
+     search
+
+     #+BEGIN_SRC c
+       regexp3( "Raptor Test", "#^$*?~RaPtOr TeSt" );
+     #+END_SRC
+
+     however modifiers '~' and '?' lose sense because the presence of '^' and/or
+     '$'.
+
+     one exprecion type:
+
+     #+BEGIN_SRC c
+       regexp3( "Raptor Test", "#$RaPtOr|#$TeSt" );
+     #+END_SRC
+
+     is erroneous, the modifier after the '|' section would apply between
+     '|' and '#', ie zero, with a return of wrong
+
+     local modifiers are placed after the repeat indicator (if there) and affect
+     the same region affecting indicators repetition, ie characters, sets or
+     groups.
+
+     - Ignore case sensitive "exp#*"
+
+       #+BEGIN_SRC c
+         regexp3( "Raptor Test", "(RaPtOr)#* TeS#*t" );
+       #+END_SRC
+
+     - Not ignore case sensitive "exp#/"
+
+       #+BEGIN_SRC c
+         regexp3( "RaPtOr TeSt", "#*(RaPtOr)#/ TES#/T" );
+       #+END_SRC
+
+** Captures
+
+   Catches are indexed according to the order of appearance in the expression
+   for example:
 
    #+BEGIN_EXAMPLE
      <   <   >  | <   <   >   >   >
@@ -409,42 +450,41 @@
                       = 3 =
    #+END_EXAMPLE
 
-   Si la exprecion dentro de la agrupacion es capturada mas de una vez
-   dentro de la linea de busqueda el indice, se incrementa segun su
-   aparicion es decir:
+   If the exprecion matches more than one occasion in the search text
+   index is increased according to their appearance that is:
 
    #+BEGIN_EXAMPLE
      <   <   >  | <   >   >   <   <   >  | <   >   >   <   <   >  | <   >   >
      = 1 ==================   = 3 ==================   = 5 ==================
          = 2==    = 2==           = 4==    = 4==           = 6==    = 6==
-     primer captura               segunda captura      tercer captura
+     coincidencia uno         coincidencia dos         coincidencia tres
    #+END_EXAMPLE
 
-   la funcion =cpytCatch= copia la captura dentro de un arreglo de
-   caracteres, aqui su prototipo:
+   =cpytCatch= function makes a copy of a catch into an array character, here
+   its prototype:
 
    #+BEGIN_SRC c
      char * cpyCatch( char * str, int index )
    #+END_SRC
 
-   - str   :: puntero lo suficientemete grande para contener la captura.
+   - str :: pointer to contain large capture suficientemete.
 
-   - index :: indice de agrupacion a recuperar de =1= a =n=.
+   - index :: index of the grouping (=1= to =n=).
 
 
-   la funcion regeresa un apuntador a la captura terminada en '\0'. Un
-   indice incorrecto regresara un apuntador que inicia en '\0'.
+   function returns a pointer to the capture terminated '\0'. an index incorrect
+   return a pointer that begins in '\0'.
 
-   para optener el numero de agrupaciones capturadas utlice
-   =totCatch=:
+   to get the number of catches in a search, using =totalCatch=:
 
    #+BEGIN_SRC c
-     int totCatch();
+     int totalCatch();
    #+END_SRC
 
-   que regresa un valor de =0= a =n=. Podria utilzar esta y la
-   anterior funcion para imprimir las agrupaciones capturadas con una
-   funcion como:
+   returning a value of =0= a =n=.
+
+   Could use this and the previous function to print all catches with a function
+   like this:
 
    #+BEGIN_SRC c
      void printCatch(){
@@ -458,17 +498,17 @@
 
 *** =gpsCatch()= y =lenCatch()=
 
-    una alternativa a =cpyCatch()=, son las funciones =gpsCatch()= y
-    =lenCatch()=. La primera regresa un puntero a la posicion donde
-    fue encontrada la captura, la segunda regresa la longitud de la
-    captura.
+    functions =gpsCatch()= and =lenCatch()= perform the same work =cpyCatch=
+    with the variant not use an array, instead the first returns a pointer to
+    the initial position of capture within the text of search and the second
+    returns the length of the capture.
 
     #+BEGIN_SRC c
       char * gpsCatch( int index );
       int lenCatch   ( int index );
     #+END_SRC
 
-    un ejemplo de uso seria:
+    the above example with these fuciones, would:
 
     #+BEGIN_SRC c
       void printCatch(){
@@ -479,435 +519,147 @@
       }
     #+END_SRC
 
-*** Colocar capturas dentro de una linea
+*** Place catches in a string
 
     #+BEGIN_SRC c
-      char * modCatch( char * newTxt, char * mstr );
+      char * putCatch( char * newStr, char * putStr );
     #+END_SRC
 
-    el argumento =mStr= contiene el texto con el cual formar la nueva cadena
-    asi como indicadores de cuales capturas colocar. El texto se coloca tal
-    cual, para indicar la insercion de una captura coque el signo '\' seguido
-    del indice de captura:
+    =putStr= argument contains the text with which to form the new chain as well
+    as indicators which you catch place. To indicate the insertion a coke
+    capture the '#' sign followed the capture index. for example =putStr=
+    argument could be
 
     #+BEGIN_SRC c
-      mStr = "captura 1 >>\\1<< captura 2 >>\\2<< captura 747 >>\\747<<";
+      char *putStr = "catch 1 >>#1<< catch 2 >>#2<< catch 747 >>#747<<";
     #+END_SRC
 
-    para imprimir el caracter '\' dentro de la nueva cadena escape '\'
-    "\\". Dentro de la cadena del programa tendra que colocar los respectivos
-    escapes del escape es decir:
+    =newStr= is an character array large enough to contain the string +
+    catches. the function returns a pointer to the starting position of this
+    arrangement, which ends with the sign of completion '\0'.
 
-    #+BEGIN_CENTER
-      cadena = "\\\\Escape\\\\"
-    #+END_CENTER
-
-    =newTxt= una apuntador a un arrglo de caracteres del tamaño suficiente
-    para almacenar el texto resultante.
-
-*** Reemplazo de captura
-
-    El reemplazo opera sobre un arreglo de caracteres en el cual se
-    coloca el texto de busqueda con las capturas reemplazadas, la
-    funcion encargada de esta labor es =rplCatch=, su prototipo es:
-
-    #+BEGIN_SRC c
-      char * rplCatch( char * newTxt, char * rStr, int index );
-    #+END_SRC
-
-    - newTxt :: arreglo de caracteres de dimension suficiente para contener el
-                texto original sobre el que se efectua la busqueda,
-                considerando el numero y dimencion de las capturas a
-                reemplazar.
-
-    - rStr   :: texto de reemplazo para captura.
-
-    - index  :: indice de captura segun el orden de aparicion dentro de la
-                exprecion regular. Pasar un indice incorrecto, coloca una
-                copia sin modificacion de la cadena de busqueda sobre el
-                arreglo =newLine=.
-
-
-    en este caso el uso del argumento =index= a diferencia de la
-    funcion =getCatch= no se refiere a una "captura" en especifico,
-    es decir no importa la cantidad de ocaciones que se ha capturado
-    una exprecion, el indice indica la *posicion* dentro de la
-    exprecion es decir:
+    to place the character '#' within the escape string '#' with '#'
+    further, ie:
 
     #+BEGIN_EXAMPLE
-      <   <   >  | <   <   >   >   >
-      = 1 ==========================
-          = 2==    = 2 =========
-                       = 3 =
-      exprecion de agrupacion con captura
+      "## Comment" -> "# comment"
     #+END_EXAMPLE
 
-    modifica una o varias capturas como
+*** Replace a catch
+
+    Replacement operates on an array of characters in which is placed the text
+    search modifying a specified catch by a string text, the function in
+    charge of this work is =rplCatch=, its prototype is:
+
+    #+BEGIN_SRC c
+      char * rplCatch( char * newStr, char * rplStr, int id );
+    #+END_SRC
+
+    - newStr :: character array dimension text is placed dende original on which
+                is carried out and the replacement text of catches.
+
+    - rplStr :: replacement text capture.
+
+    - id     :: *Capture identifier* after the order of appearance within
+                regular exprecion. Spend a wrong index, place a unaltered copy
+                of the search string on the settlement = Newstr =.
+
+
+    in this case the use of the argument =id= unlike function =getCatch= does
+    not refer to a "catch" in specific, that is no matter how much of occasions
+    that has captured a exprecion, the identifier indicates the *position*
+    within the exprecion itself, ie:
+
+    #+BEGIN_EXAMPLE
+         <   <   >  | <   <   >   >   >
+      id = 1 ==========================
+      id     = 2==    = 2 =========
+      id                  = 3 =
+      capturing position within the exprecion
+    #+END_EXAMPLE
+
+    The amendment affects so
 
     #+BEGIN_EXAMPLE
       <   <   >  | <   >   >       <   <   >  | <   >   >      <   <   >  | <   >   >
       = 1 ==================       = 1 ==================      = 1 ==================
           = 2==    = 2==               = 2==    = 2==              = 2==    = 2==
-      modificacion en captura uno  "..." dos                   "..." tres
+      capture one                  "..." two                   "..." Three
     #+END_EXAMPLE
 
-** Metacaracteres de busqueda
+** Metacharacters search
 
-   - \\ : diagonal
-   - \a : "campana"
-   - \e : "Esc"
-   - \f : salto de página
-   - \n : "nueva línea"
-   - \r : "retorno de carro"
-   - \t : tabulador.
-   - \v : tabulador vertical
-   - \x : exadecimal  8 bits 00-ff
-   - \u : exadecimal 16 bits 0000-FFFF
+   - =:d= : digit from 0 to 9.
+   - =:D= : any character other than a digit from 0 to 9.
+   - =:a= : any character is a letter (a-z, A-Z)
+   - =:A= : any character other than a letter
+   - =:w= : any alphanumeric character.
+   - =:W= : any non-alphanumeric character.
+   - =:s= : any blank space character.
+   - =:S= : any character other than a blank.
+   - =:&= : Non-ASCII character (in UTF8 version only).
 
-
-   - NOTA :: los anteriores caracteres estan por defecto incluidos en
-             c, no fue necesario implementarlos.
-
-
-   - \\d : dígito del 0 al 9.
-   - \\D : cualquier carácter que no sea un dígito del 0 al 9.
-   - \\w : cualquier carácter alfanumérico.
-   - \\W : cualquier carácter no alfanumérico.
-   - \\s : espacio en blanco.
-   - \\S : cualquier carácter que no sea un espacio en blanco.
-   - \\& : caracter no ascii (apartir de 0x80, multibyte o no).
-
-
-   - NOTA :: los anteriores (y siguietes) caracteres requieren doble
-             '\\' para escapar '\'
-
-
-   - \\| : barra vertical
-   - \\^ : acento circunflejo
-   - \\$ : signo dolar
-   - \\! : negacion
-   - \\( : parentesis izquierdo
-   - \\) : parentesis derecho
-   - \\< : mayor que
-   - \\> : menor que
-   - \\[ : corchete izquierdo
-   - \\] : corchete derecho
-   - \\. : punto
-   - \\? : interrogacion
-   - \\+ : mas
-   - \\- : menos
-   - \\* : asterisco
-   - \\{ : llave izquierda
-   - \\} : llave derecha
-   - \\# : modificador
+   - =:|= : Vertical bar
+   - =:^= : Caret
+   - =:$= : Dollar sign
+   - =:(= : Left parenthesis
+   - =:)= : Right parenthesis
+   - =:<= : Greater than
+   - =:>= : Less than
+   - =:[= : Left bracket
+   - =:]= : Right bracket
+   - =:.= : Point
+   - =:?= : Interrogacion
+   - =:+= : More
+   - =:-= : Less
+   - =:*= : Asterisk
+   - =:{= : Left key
+   - =:}= : Right key
+   - =:#= : Modifier
+   - =::= : Colons
 
 
-   - NOTA :: los anteriores caracteres insertan un caracter con
-             significado especial para su busqueda dentro de la
-             cadena, incluir el caracter tal cual (sin doble escape
-             '\\') en cualquier lugar es erroneo por ejemplo:
+   additionally use the proper c syntax to place characters new line, tab, ...,
+   etc. Similarly you can use the c syntax for "placing" characters in octal,
+   hexadecimal or unicode.
 
-             #+BEGIN_EXAMPLE
-               "(agrupacion[erronea)"
-             #+END_EXAMPLE
+** Examples of use
 
-             en lugar de
-
-             #+BEGIN_EXAMPLE
-               "(agrupacion\\[correcta)"
-             #+END_EXAMPLE
-
-             puede generar un error durante el analisis de la cadena
-             de busqueda y provocar un ciclo infinito y/o otros
-             sucesos apocalipticos.
-
-** ejemplos de uso interesantes
-
-   El fichero =test.c= contiene una amplia variedad de pruebas que son utiles
-   como ejemplos de uso, entre estos se encuentran los siguentes:
+   =ascii_test.c= file contains a wide variety of tests that are useful as
+   examples of use, these include the siguentes:
 
    #+BEGIN_SRC c
-     regexp3( "Raptor Test", "#^$<((C|R)ap C|C|R)(a+p{1}tor)\\s?((\\Se)(st))>" );
+     regexp3( "07-07-1777", "<0?[1-9]|[12][0-9]|3[01]><[/:-\\]><0?[1-9]|1[012]>@2<[12][0-9]{3}>" );
    #+END_SRC
 
-   Busqueda y captura de las posibles cadenas:
-
-   - "Cap Captor Test"
-   - "Rap Captor Test"
-   - "Captor Test"
-   - "Raptor Test"
-   - "Cap CaaptorTest"
-   - "Rap CaaptorTest"
-   - ...
-
+   captures a date format string, separately day, stripper, month and year. The
+   separator has to coincider the two occasions that appears
 
    #+BEGIN_SRC c
-     regexp3( "<< abcde : fghi jklm :: nrstu vwxyz", "#^\\s*<[\\<^_\\>]{2}>\\s+<#!( (\\<:|::|:\\>|\\>:\\<) )+> <\\<:|::|:\\>|\\>:\\<> <.*>" );
+      regexp3( "https://en.wikipedia.org/wiki/Regular_expression", "(https?|ftp):://<[^:s/:<:>]+></[^:s:.:<:>,/]+>*<.>*" );
    #+END_SRC
 
-   1. Cadena que inicia con cero o mas espacios
-   2. Captura dos caracteres de la agrupacion =[\\<^_\\>]=
-   3. Debe contuniuar uno a mas espacios en blanco
-   4. Captura caracteres mientras no coincida con el patron =(
-      (\\<:|::|:\\>|\\>:\\<) )= (espacio segudo por "<:", "::", ":>",
-      ">:<", segido por espacio)
-   5. La cadena se detuvo en el patron anterior, capturalo
-   6. Y para finalizar captura el resto de la cadena
-
-
-   el resultado serian cuatro capturas (| para resaltar margenes de captura)
-
-   #+BEGIN_EXAMPLE
-     |<<|
-     |abcde : fghi jklm|
-     |::|
-     |nrstu vwxy|
-   #+END_EXAMPLE
+   capture something like a web link
 
    #+BEGIN_SRC c
-     regexp3( "1999-12-05", "<(\\d){2,4}(\\-|/)(\\d)*(\\W{1})(\\d+)>" );
+     regexp3( "<mail>nasciiboy@gmail.com</mail>", "<[_A-Za-z0-9:-]+(:.[_A-Za-z0-9:-]+)*>:@<[A-Za-z0-9]+>:.<[A-Za-z0-9]+><(:.[A-Za-z0-9]{2})*" );
    #+END_SRC
 
-   captura algo parecido a una fecha (cifras y separadores) separado
-   por '-' o '/' y un caracter no alfanumerico
+   capture sections (user, site, domain) something like an email.
 
    #+BEGIN_SRC c
-      regexp3( "<a href=\"https://es.wikipedia.org/wiki/Expresi%C3%B3n_regular\">", "(https?://)<[^\"]*>" );
+      regexp3( "aa0123aa", "<aa><[^(aa)]>*<aa>" );
    #+END_SRC
 
-   capturar algo parecido a un enlace web
+   capturing a string containing "aa", then captures anything not
+   is "aa" and finally catch again "aa"
 
-   #+BEGIN_SRC c
-     regexp3( "contacto (nasciiboy@gmail.com) $$", "<\\w+@\\w+\\.\\w+>" );
-   #+END_SRC
+* License
 
-   capturar algo parecido a un correo.
+  This project is not "open source" is *free software*, and according to this,
+  use the GNU GPL Version 3. Any work that includes used or resulting code of
+  this library, you must comply with the terms of this license.
 
-   #+BEGIN_SRC c
-      regexp3( "1. rango entre 1985-2014.", "\\D?<\\d{4}>\\D?" );
-   #+END_SRC
-
-   capturar cifras de cuatro digitos.
-
-* Hacking
-
-  Cual es el algoritmo para resolver una exprecion regular?
-
-  1. Dividir la expresion en sus rutas principales.
-
-     Las rutas se marcan mediante el signo '|' que indica multiples
-     opciones a seguir.
-
-     #+BEGIN_EXAMPLE
-       ruta uno | ruta dos | ruta n
-     #+END_EXAMPLE
-
-     La posicion de cada expresion es indicativa del orden en que debe
-     resolverse. Una ruta principal se encuentra en el nivel de
-     anidamiento *cero* es decir esta fuara de cualquier nivel de
-     agrupamiento.
-
-     #+BEGIN_EXAMPLE
-       (ruta uno) | ( (ruta dos a | rutad dos b) ) | ruta n
-       = 0 ================================================
-       = 1 ======   = 1 ==========================
-                      = 2 ======================
-     #+END_EXAMPLE
-
-     un nuevo nivel de anidamiento surge al agrupar una parte de la
-     exprecion iniciando con '(' y finalizando con ')'. Cada '('
-     aumenta el anidamiento en 1 y cada ')' lo disminulle en 1, si
-     encontramas '|' al tener anidamiento 0, hemos encontrado una ruta
-     principal.
-
-     la funcion =walker= optiene cada ruta pricipal secuencalmente,
-     para ser enviada a =trekking= (senderista) quien debe reducirla a
-     expreciones aun mas sencillas.
-
-     #+BEGIN_EXAMPLE
-       inicio     # (ruta uno) | ( (ruta dos a | ruta dos b) ) | ruta n
-
-       ## REDUCCION UNO
-       ruta uno   # (ruta uno)
-       ruta dos   #              ( (ruta dos a | ruta dos b) )
-       ruta n     #                                              ruta n
-
-       ## REDUCCION DOS
-       ruta uno   #  ruta uno
-       ruta dos   #                (ruta dos a | ruta dos b)
-       ruta n     #                                              evaluando
-
-       ## REDUCCION TRES
-       ruta uno   #  evaluando
-       ruta dos a #                 ruta dos a
-       ruta dos b #                              ruta dos b
-       ruta n     #                                              terminado
-
-       ## REDUCCION TRES
-       ruta uno   #  terminado
-       ruta dos a #                 evaluando
-       ruta dos b #                              evaluando
-     #+END_EXAMPLE
-
-  2. Una ruta principal debe descomponerse en senderos o trayectos,
-     eliminando niveles de anidamiento y obteniendo nuevas rutas hasta
-     dejar cadenas que puedan compararse directamente.
-
-     La funcion =trekking= envia lo que internamente considera una
-     ruta a la funcion =tracker=, la cual corta y marca trayectos
-     segun el contexto.
-
-     #+BEGIN_EXAMPLE
-       trekking 1 # (ruta uno)
-       tracker       ruta uno
-     #+END_EXAMPLE
-
-     en este punto cada nuevo =track= es evaluado por =isPath()= en
-     busca de signos que indiquen la necesidad de seguir reduciendo la
-     exprecion en rutas, metacaracteres, clases de caracteres, rangos,
-     y repeticiones. De ser esto necesario, el trayecto se enviara a
-     =walker= para crear un nuevo ciclo de analisis (he aqui el paso
-     recursivo). De lo contrario el =track= es comparable directamente
-     y se optiene un resultado que es enviado a =walker= quien
-     responde a =regexp3=.
-
-  3. optener el numero de ciclos de repeticion para cada
-     ruta/trayecto/expresion
-
-     una vez que =tracker= a reducido una ruta a trayecto, envia dicho
-     trayecto a =setLoops= quien dependiento lo que encuentre a
-     continuacion establece el numero de repeticiones en las variables
-     =LoopRange(Min|Max)= (miembros de la estructura =Path=).
-
-     #+BEGIN_EXAMPLE
-       trekking  a-z    texto     (ruta uno)  *c       ?[abc]{2,3}
-       tracker   a-z    | texto   | ruta uno  | c      | abc
-       tipo      RANGEAB| SIMPLE  | GROUP     | SIMPLE | BRACKET
-       continua  t      | (       | *         | ?      | {
-       setLoops  1-1    | 1-1     | 0-INF     | 0-1    | 2-3
-       continua  t      | (       | c         | [      | '\0'
-     #+END_EXAMPLE
-
-     si la exprecion siguiente es siginificativa =setLoops= corta y
-     establece una nueva posicion al fin de dicha exprecion.
-
-
-  El siguiente diagrama ofrece una vision aproximada del
-  funcionamiento del programa.
-
-  file:regexp3.jpg
-
-** Macros
-
-   #+BEGIN_SRC c
-     #define TRUE                  1
-     #define FALSE                 0
-     #define CATCHS               24
-     #define INF               65536
-
-     #define MOD_ALPHA             1
-     #define MOD_OMEGA             2
-     #define MOD_LONLEY            4
-     #define MOD_NEGATION          8
-   #+END_SRC
-
-   =INF= establece el numero maximo de ciclos de repeticion para cada
-   =track=.
-
-   =CATCHS= establece la cantidad de capturas maximas detro de cada
-   busqueda.
-
-   las siguentes cuatro constantes representan modificadores de segmentos de
-   la expresion regular, se utiliza la constante en conjunto con una mascara
-   de bits AND, por ello el valor debe representar una potencia de dos
-
-   los primeros tres modificadores solo actuan sobre la expresion de forma
-   global, es decir deben colocarse al inicio de la expresion. colocarlos en
-   otra seccion de la expresion no tiene ningun efecto
-
-   =MOD_ALPHA= (al inicio de linea)
-
-   =MOD_OMEGA= (al final de linea)
-
-   =MOD_LONLEY= (deteren a la primer coincidencia)
-
-   =MOD_NEGATION= (mientras no coincida con ...)
-
-** Estructuras y enumeraciones
-
-   #+BEGIN_SRC c
-     struct TEXT {
-       char *ptr;
-       int   pos;
-       int   len;
-     };
-   #+END_SRC
-
-   =ptr= apunta al inicio de la cadena sobre la que se efectua la
-   busqueda, =pos= marca la posicion actual sobre la que se encuentra
-   la busqueda y =len= contiene la longitud de la cadena.
-
-   #+BEGIN_SRC c
-     enum TYPE { SIMPLE, PATH, HOOK, GROUP, BRACKET, RANGEAB, META, POINT, UTF8 };
-
-     struct RE {
-       char          *ptr;
-       int            len;
-       enum     TYPE  type;
-       unsigned char  mods;
-       unsigned int   loopsMin, loopsMax;
-     };
-   #+END_SRC
-
-   =RE= contiene la exprecion regular, deacuerdo a cada funcion puede ser
-   llamada =regx=, =path=, o =track= para indicar si se trata de la ruta
-   principal, o una seccion de esta.
-
-   =ptr= y =len= indican el inicio y longitud de la exprecion.
-
-   =mods= son modificadores del comportamiento de la exprecion
-
-   =type= indica el tipo.
-
-   - =PATH= ruta principal.
-   - =GROUP= agrupacion.
-   - =HOOK= agrupacion y captura.
-   - =SIMPLE= texto simple directamente comparable.
-   - =BRACKET= clase de caracteres
-   - =RANGEAB= rango de caracteres.
-   - =META= metacaracter.
-   - =POINT= punto.
-   - =UTF8= caracter multibyte con codificacion UTF8
-
-
-   =loopsMin= y =loopsMax= almacenan el rango de repeticiones,
-   normalmente =1= y =1= respectivamente.
-
-   #+BEGIN_SRC c
-     struct CATch {
-       char *ptr[CATCHS];
-       int   len[CATCHS];
-       int   id [CATCHS];
-       int   idx;
-       int   index;
-     } Catch;
-   #+END_SRC
-
-   =Catch= almacena un arreglo de apuntadores (=ptr=) al inicio de
-   cada captura y su longitud =len=. =index= indica el numero total de
-   capturas.
-
-   =id= identifica el orden de aparicion dentro de la exprecion
-   regular, =idx= es una variable auxiliar para obtener el
-   identificador.
-
-* Licencia
-
-  Este proyecto no es de codigo "abierto", es *software libre*, y
-  acorde a ello se utiliza la licencia GNU GPL Version 3. Cualquier
-  obra que incluya o derive codigo de esta libreria, debera cumplir
-  con los terminos de esta licencia.
-
-* Contacto, contribucion y otras cosas
+* Contact, contribution and other things
 
   [[mailto:nasciiboy@gmail.com]]
