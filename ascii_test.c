@@ -235,6 +235,12 @@ int raptorTest(){
   NTEST( "a", "a+", 1 );
   NTEST( "a", "a*", 1 );
   NTEST( "a", "b*", 1 );
+  NTEST( "a", "aa?", 1 );
+  NTEST( "a", "ab?", 1 );
+  NTEST( "a", "aa+", 0 );
+  NTEST( "a", "aa*", 1 );
+  NTEST( "a", "ab*", 1 );
+  NTEST( "a", "a{1,2}", 1 );
   NTEST( "aaa", "a+", 1 );
   NTEST( "aaa", "a*", 1 );
   NTEST( "aaa", "a+", 1 );

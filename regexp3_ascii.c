@@ -36,8 +36,6 @@ struct RE {
   unsigned int   loopsMin, loopsMax;
 };
 
-int  regexp3( char *txt, char *re );
-
 static int  walker       ( struct RE  rexp                                        );
 static int  trekking     ( struct RE *rexp                                        );
 static int  looper       ( struct RE *rexp                                        );
@@ -62,6 +60,7 @@ static int  matchText    ( struct RE *rexp, char *txt );
 static void openCatch    ( int  *index );
 static void closeCatch   ( int   index );
 static int  lastIdCatch  ( int   id    );
+
 int  totalCatch   (             );
 char *gpsCatch    ( int   index );
 int  lenCatch     ( int   index );
@@ -114,7 +113,7 @@ static int walker( struct RE rexp ){
 
 static int trekking( struct RE *rexp ){
   struct RE track;
-  int iCatch, oCindex = Catch.index, oCidx = Catch.idx, oTpos = text.pos;
+  int iCatch = MAX_CATCHS, oCindex = Catch.index, oCidx = Catch.idx, oTpos = text.pos;
 
   while( tracker( rexp, &track ) ){
     if( track.type == HOOK ) openCatch( &iCatch );
