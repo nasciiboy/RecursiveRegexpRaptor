@@ -3,7 +3,7 @@
 
 #include "regexp3.h"
 
- void printCatch(){
+void printCatch(){
   int i = 0, max = totalCatch();
 
   while( ++i <= max )
@@ -25,11 +25,9 @@ int raptorTest(){
   }
 
   TRUE_TEST( "ab", "a(b|c)|A(B|C)" );
-  TRUE_TEST( "ab", "a(b|c)|A(B|C)" );
   TRUE_TEST( "ac", "a(b|c)|A(B|C)" );
   TRUE_TEST( "AB", "a(b|c)|A(B|C)" );
   TRUE_TEST( "AC", "a(b|c)|A(B|C)" );
-  TRUE_TEST( "ab", "a<b|c>|A<B|C>" );
   TRUE_TEST( "ab", "a<b|c>|A<B|C>" );
   TRUE_TEST( "ac", "a<b|c>|A<B|C>" );
   TRUE_TEST( "AB", "a<b|c>|A<B|C>" );
@@ -49,10 +47,6 @@ int raptorTest(){
   TRUE_TEST( "1234ec", "(a<b|c>|A(B|C))|1234<ea|eb|ec>" );
   TRUE_TEST( "ace", "a(b|c)(d|e)|A(B|C)(D|E)" );
   TRUE_TEST( "ABD", "a(b|c)(d|e)|A(B|C)(D|E)" );
-  TRUE_TEST( "ace", "a(b|c)(d|e)|A(B|C)(D|E)" );
-  TRUE_TEST( "ABD", "a(b|c)(d|e)|A(B|C)(D|E)" );
-  TRUE_TEST( "ace", "a<b|c><d|e>|A<B|C><D|E>" );
-  TRUE_TEST( "ABD", "a<b|c><d|e>|A<B|C><D|E>" );
   TRUE_TEST( "ace", "a<b|c><d|e>|A<B|C><D|E>" );
   TRUE_TEST( "ABD", "a<b|c><d|e>|A<B|C><D|E>" );
 
@@ -625,6 +619,8 @@ int raptorTest(){
 
   NTEST( "",  "[a]",  0 );
   NTEST( "a", "[a]",  1 );
+  NTEST( "a", "[.]",  1 );
+  NTEST( ".", "[.]",  1 );
   NTEST( "a", "[A]",  0 );
   NTEST( "A", "[A]",  1 );
   NTEST( "1", "[A]",  0 );
@@ -638,8 +634,8 @@ int raptorTest(){
   NTEST( "a aaa aaa", "[a-z][a-z][a-z]", 2 );
   NTEST( "a aaa aaa", "[a-z]aa", 2 );
   NTEST( "a aaa aaa", "aa[a-z]", 2 );
-  NTEST( "Raptor Test", "[.]a", 1 );
-  NTEST( "Raptor Test", "[.]t", 2 );
+  NTEST( "Raptor Test", "[:w]a", 1 );
+  NTEST( "Raptor Test", "[:w]t", 2 );
   NTEST( "Raptor Test", "[a-z]z", 0 );
   NTEST( "Raptor Test", "a[a-z]", 1 );
   NTEST( "Raptor Test", " [A-Z]", 1 );
@@ -692,6 +688,8 @@ int raptorTest(){
   NTEST( "1a2a3a4a5a6a", "[1-3]a", 3 );
   NTEST( "1a2b3c4d5e6f", "[123456][abcdef]", 6 );
   NTEST( "1a2b3c4d5e6f", "[123][abcdef]", 3 );
+  NTEST( ".b.b.b.b.b.b.b.b.b.b.b.b.b.b.b.b.b.b.b.b", "[:.]",  20 );
+  NTEST( ".b.b.b.b.b.b.b.b.b.b.b.b.b.b.b.b.b.b.b.b", "[:.b]",  40 );
   NTEST( "abababababababababababababababababababab", "(a[ab])" , 20 );
   NTEST( "abababababababababababababababababababab", "([ab]a)" , 19 );
   NTEST( "abababababababababababababababababababab", "(:a[ab])" , 20 );

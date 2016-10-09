@@ -1,16 +1,16 @@
 #include "regexp3.h"
 #include "charUtils.h"
 
-#define TRUE             1
-#define FALSE            0
-#define MAX_CATCHS      16
-#define INF          65536
+#define TRUE                 1
+#define FALSE                0
+#define MAX_CATCHS          16
+#define INF         1073741824 // 2^30
 
-#define MOD_ALPHA        1
-#define MOD_OMEGA        2
-#define MOD_LONLEY       4
-#define MOD_FwrByChar    8
-#define MOD_COMMUNISM   16
+#define MOD_ALPHA            1
+#define MOD_OMEGA            2
+#define MOD_LONLEY           4
+#define MOD_FwrByChar        8
+#define MOD_COMMUNISM       16
 
 struct CATch {
   char *ptr[ MAX_CATCHS ];
@@ -60,13 +60,6 @@ static int  matchText    ( struct RE *rexp, char *txt );
 static void openCatch    ( int  *index );
 static void closeCatch   ( int   index );
 static int  lastIdCatch  ( int   id    );
-
-int  totalCatch   (             );
-char *gpsCatch    ( int   index );
-int  lenCatch     ( int   index );
-char *cpyCatch    ( char *str   ,               int index );
-char *rplCatch    ( char *newStr, char *rplStr, int id    );
-char *putCatch    ( char *newStr, char *putStr            );
 
 int regexp3( char *txt, char *re ){
   struct RE    rexp;

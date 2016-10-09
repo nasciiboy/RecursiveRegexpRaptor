@@ -314,35 +314,6 @@ int raptorTest(){
   REPLACE_TEST( "▲", "<x*>"  , 1, "z", "z▲" );
   REPLACE_TEST( "▲", "<x{1}>", 1, "z", "▲" );
 
-  REPLACE_TEST( "▲", "#~<▲>"   , 1, "", "" );
-  REPLACE_TEST( "▲", "#~<▲>?"  , 1, "", "" );
-  REPLACE_TEST( "▲", "#~<▲>+"  , 1, "", "" );
-  REPLACE_TEST( "▲", "#~<▲>*"  , 1, "", "" );
-  REPLACE_TEST( "▲", "#~<▲>{1}", 1, "", "" );
-  REPLACE_TEST( "▲", "#~<▲?>"  , 1, "", "" );
-  REPLACE_TEST( "▲", "#~<▲+>"  , 1, "", "" );
-  REPLACE_TEST( "▲", "#~<▲*>"  , 1, "", "" );
-  REPLACE_TEST( "▲", "#~<▲{1}>", 1, "", "" );
-
-  REPLACE_TEST( "▲", "#~<▲>"   , 1, "e", "e" );
-  REPLACE_TEST( "▲", "#~<▲>?"  , 1, "e", "e" );
-  REPLACE_TEST( "▲", "#~<▲>+"  , 1, "e", "e" );
-  REPLACE_TEST( "▲", "#~<▲>*"  , 1, "e", "e" );
-  REPLACE_TEST( "▲", "#~<▲>{1}", 1, "e", "e" );
-  REPLACE_TEST( "▲", "#~<▲?>"  , 1, "e", "e" );
-  REPLACE_TEST( "▲", "#~<▲+>"  , 1, "e", "e" );
-  REPLACE_TEST( "▲", "#~<▲*>"  , 1, "e", "e" );
-  REPLACE_TEST( "▲", "#~<▲{1}>", 1, "e", "e" );
-
-  REPLACE_TEST( "▲", "#~<x>?"  , 1, "z", "z▲" );
-  REPLACE_TEST( "▲", "#~<x>+"  , 1, "z", "▲" );
-  REPLACE_TEST( "▲", "#~<x>*"  , 1, "z", "z▲" );
-  REPLACE_TEST( "▲", "#~<x>{1}", 1, "z", "▲" );
-  REPLACE_TEST( "▲", "#~<x?>"  , 1, "z", "z▲" );
-  REPLACE_TEST( "▲", "#~<x+>"  , 1, "z", "▲" );
-  REPLACE_TEST( "▲", "#~<x*>"  , 1, "z", "z▲" );
-  REPLACE_TEST( "▲", "#~<x{1}>", 1, "z", "▲" );
-
   REPLACE_TEST( "▲▲▲", "<▲>"   , 1, "", "" );
   REPLACE_TEST( "▲▲▲", "<▲>?"  , 1, "", "" );
   REPLACE_TEST( "▲▲▲", "<▲>+"  , 1, "", "" );
@@ -372,16 +343,6 @@ int raptorTest(){
   REPLACE_TEST( "▲▲▲", "<x+>"  , 1, "z", "▲▲▲" );
   REPLACE_TEST( "▲▲▲", "<x*>"  , 1, "z", "z▲z▲z▲" );
   REPLACE_TEST( "▲▲▲", "<x{1}>", 1, "z", "▲▲▲" );
-
-  REPLACE_TEST( "▲▲▲", "#~<▲>"   , 1, "", "" );
-  REPLACE_TEST( "▲▲▲", "#~<▲>?"  , 1, "", "" );
-  REPLACE_TEST( "▲▲▲", "#~<▲>+"  , 1, "", "" );
-  REPLACE_TEST( "▲▲▲", "#~<▲>*"  , 1, "", "" );
-  REPLACE_TEST( "▲▲▲", "#~<▲>{1}", 1, "", "" );
-  REPLACE_TEST( "▲▲▲", "#~<▲?>"  , 1, "", "" );
-  REPLACE_TEST( "▲▲▲", "#~<▲+>"  , 1, "", "" );
-  REPLACE_TEST( "▲▲▲", "#~<▲*>"  , 1, "", "" );
-  REPLACE_TEST( "▲▲▲", "#~<▲{1}>", 1, "", "" );
 
   REPLACE_TEST( "▲▲▲b", "<▲>"   , 1, "e", "eeeb" );
   REPLACE_TEST( "▲▲▲b", "<▲>?"  , 1, "e", "eeeeb" );
