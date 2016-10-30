@@ -467,7 +467,6 @@ int raptorTest(){
 
   NTEST( "aeiou", ":a", 5 );
 
-
   NTEST( "(((", ":(", 3 );
   NTEST( ")))", ":)", 3 );
   NTEST( "<<<", ":<", 3 );
@@ -1108,35 +1107,6 @@ int raptorTest(){
   REPLACE_TEST( "a", "<x*>"  , 1, "z", "za" );
   REPLACE_TEST( "a", "<x{1}>", 1, "z", "a" );
 
-  REPLACE_TEST( "a", "#~<a>"   , 1, "", "" );
-  REPLACE_TEST( "a", "#~<a>?"  , 1, "", "" );
-  REPLACE_TEST( "a", "#~<a>+"  , 1, "", "" );
-  REPLACE_TEST( "a", "#~<a>*"  , 1, "", "" );
-  REPLACE_TEST( "a", "#~<a>{1}", 1, "", "" );
-  REPLACE_TEST( "a", "#~<a?>"  , 1, "", "" );
-  REPLACE_TEST( "a", "#~<a+>"  , 1, "", "" );
-  REPLACE_TEST( "a", "#~<a*>"  , 1, "", "" );
-  REPLACE_TEST( "a", "#~<a{1}>", 1, "", "" );
-
-  REPLACE_TEST( "a", "#~<a>"   , 1, "e", "e" );
-  REPLACE_TEST( "a", "#~<a>?"  , 1, "e", "e" );
-  REPLACE_TEST( "a", "#~<a>+"  , 1, "e", "e" );
-  REPLACE_TEST( "a", "#~<a>*"  , 1, "e", "e" );
-  REPLACE_TEST( "a", "#~<a>{1}", 1, "e", "e" );
-  REPLACE_TEST( "a", "#~<a?>"  , 1, "e", "e" );
-  REPLACE_TEST( "a", "#~<a+>"  , 1, "e", "e" );
-  REPLACE_TEST( "a", "#~<a*>"  , 1, "e", "e" );
-  REPLACE_TEST( "a", "#~<a{1}>", 1, "e", "e" );
-
-  REPLACE_TEST( "a", "#~<x>?"  , 1, "z", "za" );
-  REPLACE_TEST( "a", "#~<x>+"  , 1, "z", "a" );
-  REPLACE_TEST( "a", "#~<x>*"  , 1, "z", "za" );
-  REPLACE_TEST( "a", "#~<x>{1}", 1, "z", "a" );
-  REPLACE_TEST( "a", "#~<x?>"  , 1, "z", "za" );
-  REPLACE_TEST( "a", "#~<x+>"  , 1, "z", "a" );
-  REPLACE_TEST( "a", "#~<x*>"  , 1, "z", "za" );
-  REPLACE_TEST( "a", "#~<x{1}>", 1, "z", "a" );
-
   REPLACE_TEST( "aaa", "<a>"   , 1, "", "" );
   REPLACE_TEST( "aaa", "<a>?"  , 1, "", "" );
   REPLACE_TEST( "aaa", "<a>+"  , 1, "", "" );
@@ -1166,16 +1136,6 @@ int raptorTest(){
   REPLACE_TEST( "aaa", "<x+>"  , 1, "z", "aaa" );
   REPLACE_TEST( "aaa", "<x*>"  , 1, "z", "zazaza" );
   REPLACE_TEST( "aaa", "<x{1}>", 1, "z", "aaa" );
-
-  REPLACE_TEST( "aaa", "#~<a>"   , 1, "", "" );
-  REPLACE_TEST( "aaa", "#~<a>?"  , 1, "", "" );
-  REPLACE_TEST( "aaa", "#~<a>+"  , 1, "", "" );
-  REPLACE_TEST( "aaa", "#~<a>*"  , 1, "", "" );
-  REPLACE_TEST( "aaa", "#~<a>{1}", 1, "", "" );
-  REPLACE_TEST( "aaa", "#~<a?>"  , 1, "", "" );
-  REPLACE_TEST( "aaa", "#~<a+>"  , 1, "", "" );
-  REPLACE_TEST( "aaa", "#~<a*>"  , 1, "", "" );
-  REPLACE_TEST( "aaa", "#~<a{1}>", 1, "", "" );
 
   REPLACE_TEST( "aaab", "<a>"   , 1, "e", "eeeb" );
   REPLACE_TEST( "aaab", "<a>?"  , 1, "e", "eeeeb" );
