@@ -36,30 +36,30 @@ struct RE {
   unsigned int   loopsMin, loopsMax;
 };
 
-static int  walker       ( struct RE  rexp                                       );
-static int  trekking     ( struct RE *rexp                                       );
-static int  looper       ( struct RE *rexp                                       );
-static int  cutTrack     ( struct RE *rexp,  struct RE *track,          int type );
-static int  tracker      ( struct RE *rexp,  struct RE *track                    );
+static int  walker       ( struct RE  rexp );
+static int  trekking     ( struct RE *rexp );
+static int  looper       ( struct RE *rexp );
+static int  tracker      ( struct RE *rexp, struct RE *track );
+static int  cutTrack     ( struct RE *rexp, struct RE *track, int type );
 
-static int  walkMeta     ( char      *str                                        );
-static int  walkBracket  ( char      *str                                        );
-static void trackByLen   ( struct RE *rexp,  struct RE *track, int len, int type );
-static char *trackerPoint(                   char      *track, int len           );
-static void getMods      ( struct RE *rexp,  struct RE *track                    );
-static void setLoops     ( struct RE *rexp,  struct RE *track                    );
-static void fwrTrack     ( struct RE *track,                   int len           );
+static void trackByLen   ( struct RE *rexp, struct RE *track, int len, int type );
+static void getMods      ( struct RE *rexp, struct RE *track );
+static void setLoops     ( struct RE *rexp, struct RE *track );
+static void fwrTrack     ( struct RE *track, int len );
+static int  walkMeta     ( char *str );
+static int  walkBracket  ( char *str );
+static char *trackerPoint( char *track, int len );
 
 static int  match        ( struct RE *rexp );
 static int  matchBracket ( struct RE  rexp );
 static int  matchBackRef ( struct RE *rexp );
-static int  matchRange   ( struct RE *rexp, char  chr );
+static int  matchRange   ( struct RE *rexp, int   chr );
 static int  matchMeta    ( struct RE *rexp, char *txt );
 static int  matchText    ( struct RE *rexp, char *txt );
 
-static void openCatch    ( int  *index );
-static void closeCatch   ( int   index );
-static int  lastIdCatch  ( int   id    );
+static void openCatch    ( int *index );
+static void closeCatch   ( int  index );
+static int  lastIdCatch  ( int  id    );
 
 int regexp3( char *txt, char *re ){
   struct RE    rexp;
@@ -98,7 +98,9 @@ int regexp3( char *txt, char *re ){
 
 static int walker( struct RE rexp ){
   struct RE track;
-  while( cutTrack( &rexp, &track, PATH ) )
+  for( const int oCindex = Catch.index, oCidx = Catch.idx, oTpos = text.pos;
+       cutTrack( &rexp, &track, PATH );
+       Catch.index = oCindex, Catch.idx = oCidx, text.pos = oTpos )
     if( track.len && trekking( &track ) ) return TRUE;
 
   return FALSE;
@@ -106,27 +108,23 @@ static int walker( struct RE rexp ){
 
 static int trekking( struct RE *rexp ){
   struct RE track;
-  int iCatch = MAX_CATCHS, oCindex = Catch.index, oCidx = Catch.idx, oTpos = text.pos;
-
-  while( tracker( rexp, &track ) ){
-    if( track.type == HOOK ) openCatch( &iCatch );
-
-    if( track.len == 0 || looper( &track ) == FALSE ){
-      text.pos    = oTpos;
-      Catch.index = oCindex;
-      Catch.idx   = oCidx;
-      return        FALSE;
-    } else if( track.type == HOOK ) closeCatch( iCatch );
-  }
+  while( tracker( rexp, &track ) )
+    if( track.len == 0 || looper( &track ) == FALSE ) return FALSE;
 
   return TRUE;
 }
 
 static int looper( struct RE *rexp ){
-  int steps, loops = 0;
+  int iCatch, steps, loops = 0;
 
   switch( rexp->type ){
-  case HOOK: case GROUP: case PATH:
+  case HOOK:
+    openCatch( &iCatch );
+    while( loops < rexp->loopsMax && walker( *rexp ) )
+      loops++;
+    if( loops >= rexp->loopsMin ) closeCatch( iCatch );
+    break;
+  case GROUP: case PATH:
     while( loops < rexp->loopsMax && walker( *rexp ) )
       loops++;
     break;
@@ -141,7 +139,7 @@ static int looper( struct RE *rexp ){
 }
 
 static int cutTrack( struct RE *rexp, struct RE *track, int type ){
-  if( !rexp->len ) return FALSE;
+  if( rexp->len == 0 ) return FALSE;
 
   *track      = *rexp;
   track->type = type;
@@ -294,17 +292,16 @@ static int match( struct RE *rexp ){
 
 static int matchText( struct RE *rexp, char *txt ){
   if( rexp->mods & MOD_COMMUNISM )
-    return    strnCmpCommunist( txt, rexp->ptr, rexp->len )  == 0 ? rexp->len : 0;
-  else return strnCmp         ( txt, rexp->ptr, rexp->len )  == 0 ? rexp->len : 0;
+    return    strnEqlCommunist( txt, rexp->ptr, rexp->len ) ? rexp->len : 0;
+  else return strnEql         ( txt, rexp->ptr, rexp->len ) ? rexp->len : 0;
 }
 
-static int matchRange( struct RE *rexp, char chr ){
+static int matchRange( struct RE *rexp, int chr ){
   if( rexp->mods & MOD_COMMUNISM ){
     chr = toLower( chr );
     return chr >= toLower( rexp->ptr[ 0 ] ) && chr <= toLower( rexp->ptr[ 2 ] );
-  }
-
-  return chr >= rexp->ptr[ 0 ] && chr <= rexp->ptr[ 2 ];
+  } else
+    return chr >=          rexp->ptr[ 0 ]   && chr <=          rexp->ptr[ 2 ];
 }
 
 static int matchMeta( struct RE *rexp, char *txt ){
@@ -350,7 +347,7 @@ static int matchBackRef( struct RE *rexp ){
   int backRefId    = aToi( rexp->ptr + 1 );
   int backRefIndex = lastIdCatch( backRefId );
   if( gpsCatch( backRefIndex ) == 0 ||
-      strnCmp( text.ptr + text.pos, gpsCatch( backRefIndex ), lenCatch( backRefIndex ) ) != 0 )
+      strnEql( text.ptr + text.pos, gpsCatch( backRefIndex ), lenCatch( backRefIndex ) ) == FALSE )
     return FALSE;
   else return lenCatch( backRefIndex );
 }

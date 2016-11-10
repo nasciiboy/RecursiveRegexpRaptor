@@ -34,11 +34,11 @@ static char * strnChr( char *str, int chr, int n ){
   return 0;
 }
 
-static int strnCmp( char *s, char *t, int n ){
+static int strnEql( char *s, char *t, int n ){
   for( ; *s == *t; s++, t++ )
-    if( *s == '\0' || --n <= 0 ) return 0;
+    if( *s == '\0' || --n <= 0 ) return 1;
 
-  return *s - *t;
+  return 0;
 }
 
 static int cmpChrCommunist( char a, char b){
@@ -54,11 +54,11 @@ static char * strnChrCommunist( char *str, int chr, int n ){
   return 0;
 }
 
-static int strnCmpCommunist( char *s, char *t, int n ){
+static int strnEqlCommunist( char *s, char *t, int n ){
   for( ; cmpChrCommunist( *s, *t ); s++, t++ )
-    if( *s == '\0' || --n <= 0 ) return 0;
+    if( *s == '\0' || --n <= 0 ) return 1;
 
-  return *s - *t;
+  return 0;
 }
 
 static int aToi( char *str ){
