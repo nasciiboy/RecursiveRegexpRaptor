@@ -59,8 +59,8 @@ regexp4: [[https://github.com/nasciiboy/RecursiveRegexpRaptor-4][aqui]]
   centra en la simplicidad y el codigo, el segundo aun en fase beta ([[https://github.com/nasciiboy/RecursiveRegexpRaptor-4][regexp4]])
   intenta alcanzar la maxima velocidad posible implemetando una "tabla de
   instrucciones". En ambos casos el algoritmo parte de cero, y solo se hace uso
-  de C tal cual la primer vercion ocupa un total de *520 lineas de codigo* y la
-  segunda *682 lineas*. enjoy!
+  de C tal cual la primer vercion ocupa un total de *517 lineas de codigo* y la
+  segunda *679 lineas*. enjoy!
 
 ** Motivacion
 

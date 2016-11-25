@@ -44,7 +44,7 @@ static int  cutTrack     ( struct RE *rexp, struct RE *track, int type );
 
 static void trackByLen   ( struct RE *rexp, struct RE *track, int len, int type );
 static void getMods      ( struct RE *rexp, struct RE *track );
-static void setLoops     ( struct RE *rexp, struct RE *track );
+static void getLoops     ( struct RE *rexp, struct RE *track );
 static void fwrTrack     ( struct RE *track, int len );
 static int  walkMeta     ( char *str );
 static int  walkBracket  ( char *str );
@@ -175,36 +175,34 @@ static int cutTrack( struct RE *rexp, struct RE *track, int type ){
 static int tracker( struct RE *rexp, struct RE *track ){
   char *point;
 
-  if( rexp->len ){
-    switch( *rexp->ptr & xooooooo ? UTF8 : *rexp->ptr ){
-    case ':' : trackByLen( rexp, track, 2,                    META    ); break;
-    case '.' : trackByLen( rexp, track, 1,                    POINT   ); break;
-    case '@' : trackByLen( rexp, track, 1 +
-                                      countCharDigits( rexp->ptr + 1 ),
-                                                              BACKREF ); break;
-    case '(' : cutTrack  ( rexp, track,                       GROUP   ); break;
-    case '<' : cutTrack  ( rexp, track,                       HOOK    ); break;
-    case '[' : cutTrack  ( rexp, track,                       BRACKET ); break;
-    case UTF8: trackByLen( rexp, track, utf8meter(rexp->ptr), UTF8    ); break;
-    default :
-      if( (point = trackerPoint( rexp->ptr + 1, rexp->len - 1 )) ){
-        switch( *point ){
-        default: trackByLen( rexp, track, point - rexp->ptr, SIMPLE  ); break;
-        case '?': case '+': case '*': case '{': case '-': case '#':
-          if( point - rexp->ptr == 1 ){
-            if( *point == '-' ) trackByLen( rexp, track, 3, RANGEAB );
-            else                trackByLen( rexp, track, 1, SIMPLE  );
-          } else trackByLen( rexp, track, (point - rexp->ptr) - 1, SIMPLE  );
-        }
-      } else trackByLen( rexp, track, rexp->len, SIMPLE  );
-    }
+  if( rexp->len == 0 ) return FALSE;
 
-    setLoops( rexp, track );
-    getMods ( rexp, track );
-    return TRUE;
+  switch( *rexp->ptr & xooooooo ? UTF8 : *rexp->ptr ){
+  case ':' : trackByLen( rexp, track, 2,                    META    ); break;
+  case '.' : trackByLen( rexp, track, 1,                    POINT   ); break;
+  case '@' : trackByLen( rexp, track, 1 +
+                                     countCharDigits( rexp->ptr + 1 ),
+                                                            BACKREF ); break;
+  case '(' : cutTrack  ( rexp, track,                       GROUP   ); break;
+  case '<' : cutTrack  ( rexp, track,                       HOOK    ); break;
+  case '[' : cutTrack  ( rexp, track,                       BRACKET ); break;
+  case UTF8: trackByLen( rexp, track, utf8meter(rexp->ptr), UTF8    ); break;
+  default :
+    if( (point = trackerPoint( rexp->ptr + 1, rexp->len - 1 )) ){
+      switch( *point ){
+      default: trackByLen( rexp, track, point - rexp->ptr, SIMPLE  ); break;
+      case '?': case '+': case '*': case '{': case '-': case '#':
+        if( point - rexp->ptr == 1 ){
+          if( *point == '-' ) trackByLen( rexp, track, 3, RANGEAB );
+          else                trackByLen( rexp, track, 1, SIMPLE  );
+        } else trackByLen( rexp, track, (point - rexp->ptr) - 1, SIMPLE  );
+      }
+    } else trackByLen( rexp, track, rexp->len, SIMPLE  );
   }
 
-  return FALSE;
+  getLoops( rexp, track );
+  getMods ( rexp, track );
+  return TRUE;
 }
 
 static void trackByLen( struct RE *rexp, struct RE *track, int len, int type ){
@@ -257,7 +255,7 @@ static void getMods( struct RE *rexp, struct RE *track ){
   fwrTrack( rexp, pos );
 }
 
-static void setLoops( struct RE *rexp, struct RE *track ){
+static void getLoops( struct RE *rexp, struct RE *track ){
   track->loopsMin = 1; track->loopsMax = 1;
   int len = 0;
 
@@ -352,25 +350,24 @@ static int matchBackRef( struct RE *rexp ){
   else return lenCatch( backRefIndex );
 }
 
+static int lastIdCatch( int id ){
+  for( int index = Catch.index - 1; index > 0; index-- )
+    if( Catch.id[ index ] == id ) return index;
+
+  return MAX_CATCHS;
+}
+
 static void openCatch( int *index ){
   if( Catch.index < MAX_CATCHS ){
     *index = Catch.index++;
     Catch.ptr[ *index ] = text.ptr + text.pos;
     Catch.id [ *index ] = Catch.idx++;
-  }
+  } else *index = MAX_CATCHS;
 }
 
 static void closeCatch( int index ){
   if( index < MAX_CATCHS )
     Catch.len[ index ] = &text.ptr[ text.pos ] - Catch.ptr[ index ];
-}
-
-static int lastIdCatch( int id ){
-  int lastId = MAX_CATCHS;
-  for( int index = 1; index < Catch.index; index++ )
-    if( Catch.id[ index ] == id ) lastId = index;
-
-  return lastId;
 }
 
 int totalCatch(){ return Catch.index - 1; }
