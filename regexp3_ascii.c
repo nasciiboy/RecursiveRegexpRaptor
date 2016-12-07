@@ -40,15 +40,14 @@ static int  walker       ( struct RE  rexp );
 static int  trekking     ( struct RE *rexp );
 static int  looper       ( struct RE *rexp );
 static int  tracker      ( struct RE *rexp, struct RE *track );
-static int  cutTrack     ( struct RE *rexp, struct RE *track, int type );
-
+static int  trackByType  ( struct RE *rexp, struct RE *track, int type );
 static void trackByLen   ( struct RE *rexp, struct RE *track, int len, int type );
+
 static void getMods      ( struct RE *rexp, struct RE *track );
 static void getLoops     ( struct RE *rexp, struct RE *track );
 static void fwrTrack     ( struct RE *track, int len );
 static int  walkMeta     ( char *str );
 static int  walkBracket  ( char *str );
-static char *trackerPoint( char *points, char *track, int len );
 
 static int  match        ( struct RE *rexp );
 static int  matchBracket ( struct RE  rexp );
@@ -99,7 +98,7 @@ int regexp3( char *txt, char *re ){
 static int walker( struct RE rexp ){
   struct RE track;
   for( const int oCindex = Catch.index, oCidx = Catch.idx, oTpos = text.pos;
-       cutTrack( &rexp, &track, PATH );
+       trackByType( &rexp, &track, PATH );
        Catch.index = oCindex, Catch.idx = oCidx, text.pos = oTpos )
     if( track.len && trekking( &track ) ) return TRUE;
 
@@ -138,7 +137,48 @@ static int looper( struct RE *rexp ){
   return loops < rexp->loopsMin ? FALSE : TRUE;
 }
 
-static int cutTrack( struct RE *rexp, struct RE *track, int type ){
+static int tracker( struct RE *rexp, struct RE *track ){
+  if( rexp->len == 0 ) return FALSE;
+
+  switch( *rexp->ptr ){
+  case ':': trackByLen ( rexp, track, 2, META    ); break;
+  case '.': trackByLen ( rexp, track, 1, POINT   ); break;
+  case '@': trackByLen ( rexp, track, 1 +
+                         countCharDigits( rexp->ptr + 1 ),
+                                         BACKREF ); break;
+  case '(': trackByType( rexp, track,    GROUP   ); break;
+  case '<': trackByType( rexp, track,    HOOK    ); break;
+  case '[': trackByType( rexp, track,    BRACKET ); break;
+  default :
+    for( int i = 1; i < rexp->len; i++ )
+      switch( rexp->ptr[ i ] ){
+      case '(': case '<': case '[': case '@': case ':': case '.':
+        trackByLen( rexp, track, i, SIMPLE  ); goto getLM;
+      case '?': case '+': case '*': case '{': case '-': case '#':
+        if( i == 1 ){
+          if( rexp->ptr[ i ] == '-' ) trackByLen( rexp, track, 3, RANGEAB );
+          else                        trackByLen( rexp, track, 1, SIMPLE  );
+        } else trackByLen( rexp, track, i - 1, SIMPLE  );
+        goto getLM;
+      }
+
+    trackByLen( rexp, track, rexp->len, SIMPLE  );
+  }
+
+ getLM:
+  getLoops( rexp, track );
+  getMods ( rexp, track );
+  return TRUE;
+}
+
+static void trackByLen( struct RE *rexp, struct RE *track, int len, int type ){
+  *track       = *rexp;
+  track->type  = type;
+  track->len   = len;
+  fwrTrack( rexp, len );
+}
+
+static int trackByType( struct RE *rexp, struct RE *track, int type ){
   if( rexp->len == 0 ) return FALSE;
 
   *track      = *rexp;
@@ -170,53 +210,6 @@ static int cutTrack( struct RE *rexp, struct RE *track, int type ){
 
   fwrTrack( rexp, rexp->len );
   return TRUE;
-}
-
-static int tracker( struct RE *rexp, struct RE *track ){
-  char *point;
-
-  if( rexp->len == 0 ) return FALSE;
-
-  switch( *rexp->ptr ){
-  case ':': trackByLen( rexp, track, 2, META    ); break;
-  case '.': trackByLen( rexp, track, 1, POINT   ); break;
-  case '@': trackByLen( rexp, track, 1 +
-                        countCharDigits( rexp->ptr + 1 ),
-                                        BACKREF ); break;
-  case '(': cutTrack  ( rexp, track,    GROUP   ); break;
-  case '<': cutTrack  ( rexp, track,    HOOK    ); break;
-  case '[': cutTrack  ( rexp, track,    BRACKET ); break;
-  default :
-    if( (point = trackerPoint( "(<[@:.?+*{-#", rexp->ptr + 1, rexp->len - 1 )) ){
-      switch( *point ){
-      case '(': case '<': case '[': case '@': case ':': case '.':
-        trackByLen( rexp, track, point - rexp->ptr, SIMPLE  ); break;
-      case '?': case '+': case '*': case '{': case '-': case '#':
-        if( point - rexp->ptr == 1 ){
-          if( *point == '-' ) trackByLen( rexp, track, 3, RANGEAB );
-          else                trackByLen( rexp, track, 1, SIMPLE  );
-        } else trackByLen( rexp, track, (point - rexp->ptr) - 1, SIMPLE  );
-      }
-    } else trackByLen( rexp, track, rexp->len, SIMPLE  );
-  }
-
-  getLoops( rexp, track );
-  getMods ( rexp, track );
-  return TRUE;
-}
-
-static void trackByLen( struct RE *rexp, struct RE *track, int len, int type ){
-  *track       = *rexp;
-  track->type  = type;
-  track->len   = len;
-  fwrTrack( rexp, len );
-}
-
-static char * trackerPoint( char *points, char *track, int len ){
-  for( int pos = 0; pos < len; pos++ )
-    if( strChr( points, track[ pos ] ) ) return track + pos;
-
-  return 0;
 }
 
 static int walkBracket( char *str ){
@@ -369,7 +362,7 @@ static void closeCatch( int index ){
     Catch.len[ index ] = &text.ptr[ text.pos ] - Catch.ptr[ index ];
 }
 
-int totalCatch(){ return Catch.index - 1; }
+int totCatch(){ return Catch.index - 1; }
 
 char * gpsCatch( int index ){
   return ( index > 0 && index < Catch.index ) ? Catch.ptr[ index ] : 0;

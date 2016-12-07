@@ -1,3 +1,5 @@
+#ifndef REGEXP3_H
+#define REGEXP3_H
 /*************************************************************************
  * <Recursive Regexp Raptor (regexp3) regexp library.>
  * https://github.com/nasciiboy/RecursiveRegexpRaptor
@@ -17,11 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-int  regexp3      ( char *txt, char *re );
+int  regexp3( char *txt, char *re );
 
-int  totalCatch   ();
-char *gpsCatch    ( int   index );
-int  lenCatch     ( int   index );
-char *cpyCatch    ( char *str   ,               int index );
-char *rplCatch    ( char *newStr, char *rplStr, int id    );
-char *putCatch    ( char *newStr, char *putStr            );
+int   totCatch();
+char *gpsCatch( int index );
+int   lenCatch( int index );
+char *cpyCatch( char *str, int index );
+char *rplCatch( char *newStr, char *rplStr, int id );
+char *putCatch( char *newStr, char *putStr );
+
+#endif

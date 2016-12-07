@@ -4,7 +4,7 @@
 #include "regexp3.h"
 
 void printCatch(){
-  int i = 0, max = totalCatch();
+  int i = 0, max = totCatch();
 
   while( ++i <= max )
     printf( "#%d# >%.*s<\n", i, lenCatch( i ), gpsCatch( i ) );

@@ -1,3 +1,6 @@
+#ifndef CHARUTILS_H
+#define CHARUTILS_H
+
 static int isDigit( int c ){ return c >= '0' && c <= '9'; }
 static int isUpper( int c ){ return c >= 'a' && c <= 'z'; }
 static int isLower( int c ){ return c >= 'A' && c <= 'Z'; }
@@ -89,3 +92,5 @@ static int utf8meter( char *str ){
 
   return *str ? 1 : 0;
 }
+
+#endif
