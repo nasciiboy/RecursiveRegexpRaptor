@@ -85,7 +85,10 @@ int regexp3( char *txt, char *re ){
     text.len   = Catch.len[0] - i;
 
     if( walker( rexp ) ){
-      if     (  rexp.mods & MOD_OMEGA    ){ if( text.pos == text.len ) return TRUE; }
+      if     (  rexp.mods & MOD_OMEGA    ){
+        if( text.pos == text.len ) return TRUE;
+        else Catch.index = 1;
+      }
       else if(  rexp.mods & MOD_LONLEY   )                             return TRUE;
       else if( (rexp.mods & MOD_FwrByChar) || text.pos == 0 )          result++;
       else   {  forward = text.pos;                                    result++; }
@@ -97,10 +100,10 @@ int regexp3( char *txt, char *re ){
 
 static int walker( struct RE rexp ){
   struct RE track;
-  for( const int oCindex = Catch.index, oCidx = Catch.idx, oTpos = text.pos;
+  for( const int oTpos = text.pos, oCindex = Catch.index, oCidx = Catch.idx;
        trackByType( &rexp, &track, PATH );
-       Catch.index = oCindex, Catch.idx = oCidx, text.pos = oTpos )
-    if( track.len && trekking( &track ) ) return TRUE;
+       text.pos = oTpos, Catch.index = oCindex, Catch.idx = oCidx )
+    if( trekking( &track ) ) return TRUE;
 
   return FALSE;
 }
@@ -108,7 +111,7 @@ static int walker( struct RE rexp ){
 static int trekking( struct RE *rexp ){
   struct RE track;
   while( tracker( rexp, &track ) )
-    if( track.len == 0 || looper( &track ) == FALSE ) return FALSE;
+    if( looper( &track ) == FALSE ) return FALSE;
 
   return TRUE;
 }
