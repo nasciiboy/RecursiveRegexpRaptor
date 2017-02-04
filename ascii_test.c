@@ -782,7 +782,6 @@ int raptorTest(){
   NTEST( "abababababababababababababababababababab", "([^x]{5}:a{5})" , 4 );
   NTEST( "()<>[]{}*?+", "[^:w]", 11 );
 
-
   NTEST( "",  "@1",  0 );
   NTEST( "a", "@1",  0 );
   NTEST( "a", "@a",  0 );
@@ -801,7 +800,6 @@ int raptorTest(){
   NTEST( "A", "[^@100]", 1 );
   NTEST( "1", "[^@1]",  0 );
   NTEST( "@", "[^2@]",  0 );
-
 
   NTEST( "",  "(@1)",  0 );
   NTEST( "a", "(@1)",  0 );
@@ -991,8 +989,6 @@ int raptorTest(){
   NTEST( "Raptor tESt Fest", "#*rapTor (tESt)#/ fEST", 1 );
   NTEST( "Raptor TesT Fest", "#*rapTor (tE#/S#/t)#* fEST", 0 );
   NTEST( "Raptor tESt Fest", "#*rapTor (tE#/S#/t)#* fEST", 1 );
-
-
 
   char str[1024];
 #define CATCH_TEST( text, re, n, rtext )                \

@@ -173,7 +173,8 @@ static int tracker( struct RE *rexp, struct RE *track ){
 static void cutSimple( struct RE *rexp, struct RE *track ){
   for( int i = 1; i < rexp->len; i++ )
     switch( rexp->ptr[ i ] & xooooooo ? UTF8 : rexp->ptr[ i ] ){
-    default: cutByLen( rexp, track, i, SIMPLE  ); return;
+    case '(': case '<': case '[': case '@': case ':': case '.': case UTF8:
+      cutByLen( rexp, track, i, SIMPLE  ); return;
     case '?': case '+': case '*': case '{': case '-': case '#':
       if( i == 1 ){
         if( rexp->ptr[ i ] == '-' ) cutByLen( rexp, track, 3, RANGEAB );
@@ -227,6 +228,10 @@ static void cutPair( struct RE *rexp, struct RE *track, const int type ){
   cutRexp( rexp, track->len + 2 );
 }
 
+static void cutRexp( struct RE *rexp, const int len ){
+  rexp->ptr += len; rexp->len -= len;
+}
+
 static int walkPair( const char *rexp, const int len, const char p[2] ){
   for( int i = 0, deep = 0; (i += walkMeta( rexp + i, len + i )) < len; i++ ){
     if( rexp[i] == p[0] ) deep++;
@@ -242,10 +247,6 @@ static int walkMeta( const char *str, const int len ){
     if( str[i] != ':' ) return i;
 
   return len;
-}
-
-static void cutRexp( struct RE *rexp, const int len ){
-  rexp->ptr += len; rexp->len -= len;
 }
 
 static void getMods( struct RE *rexp, struct RE *track ){
@@ -270,9 +271,9 @@ static void getLoops( struct RE *rexp, struct RE *track ){
 
   if( rexp->len )
     switch( *rexp->ptr ){
-    case '?' : track->loopsMin = 0; track->loopsMax =   1; cutRexp( rexp, 1 ); return;
-    case '+' : track->loopsMin = 1; track->loopsMax = INF; cutRexp( rexp, 1 ); return;
-    case '*' : track->loopsMin = 0; track->loopsMax = INF; cutRexp( rexp, 1 ); return;
+    case '?' : cutRexp( rexp, 1 ); track->loopsMin = 0; track->loopsMax =   1; return;
+    case '+' : cutRexp( rexp, 1 ); track->loopsMin = 1; track->loopsMax = INF; return;
+    case '*' : cutRexp( rexp, 1 ); track->loopsMin = 0; track->loopsMax = INF; return;
     case '{' : cutRexp( rexp, 1 );
       track->loopsMin = aToi( rexp->ptr );
       cutRexp( rexp, countCharDigits( rexp->ptr ) );
@@ -284,8 +285,7 @@ static void getLoops( struct RE *rexp, struct RE *track ){
           track->loopsMax = aToi( rexp->ptr );
           cutRexp( rexp, countCharDigits( rexp->ptr  ) );
         }
-      } else
-        track->loopsMax = track->loopsMin;
+      } else track->loopsMax = track->loopsMin;
 
       cutRexp( rexp, 1 );
     }
