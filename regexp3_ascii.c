@@ -310,6 +310,7 @@ static int matchRange( struct RE *rexp, int chr ){
     return chr >=          rexp->ptr[ 0 ]   && chr <=          rexp->ptr[ 2 ];
 }
 
+
 static int matchMeta( struct RE *rexp, const int chr ){
   switch( rexp->ptr[1] ){
   case 'a' : return  isAlpha( chr );
@@ -397,41 +398,41 @@ char * cpyCatch( char * str, const int index ){
 
 char * rplCatch( char * newStr, const char * rplStr, const int id ){
   char *oNewStr = newStr;
-  const char *text = Catch.ptr[ 0 ];
-  strCpy( newStr, text );
+  const char *last = Catch.ptr[ 0 ];
 
-  for( int index = 1; index < Catch.index; index++ )
-    if( Catch.id[ index ] == id ){
-      newStr += Catch.ptr[ index ] - text;
+  for( int index = 1, rpLen = strLen( rplStr ); index < Catch.index; index++ )
+    if( id == Catch.id[ index ] ){
+      if( last > Catch.ptr[index] ) last = Catch.ptr[index];
+
+      strnCpy( newStr, last, Catch.ptr[index] - last );
+      newStr += Catch.ptr[index] - last;
       strCpy( newStr, rplStr );
-      newStr += strLen( rplStr );
-      text    = Catch.ptr[ index ] + Catch.len[ index ];
-      strCpy( newStr, text );
+      newStr += rpLen;
+      last    = Catch.ptr[index] + Catch.len[index];
     }
 
+  strnCpy( newStr, last, Catch.ptr[0] + Catch.len[0] - last );
   return oNewStr;
 }
 
 char * putCatch( char * newStr, const char * putStr ){
-  int  index;
   char *oNewStr = newStr;
-  const char *pos;
-  strCpy( newStr, putStr );
 
-  while( (pos = strChr( putStr, '#' )) ){
-    if( pos[ 1 ] == '#' ){
-      newStr += pos + 1 - putStr;
-      putStr  = pos + 2;
-    } else {
-      index   = aToi( pos + 1 );
-      newStr += pos - putStr;
-      cpyCatch( newStr, index );
-      newStr += lenCatch( index );
-      putStr  = pos + 1 + countCharDigits( pos + 1 );
+  while( *putStr )
+    switch( *putStr ){
+    case '#':
+      if( *++putStr == '#' )
+        *newStr++ = *putStr++;
+      else {
+        int index = aToi( putStr );
+        cpyCatch( newStr, index );
+        newStr += lenCatch( index );
+        putStr += countCharDigits( putStr );
+      } break;
+    default : *newStr++ = *putStr++;
     }
 
-    strCpy( newStr, putStr );
-  }
+  *newStr = '\0';
 
   return oNewStr;
 }

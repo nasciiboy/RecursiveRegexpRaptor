@@ -58,7 +58,7 @@ raptor-book (draft (spanish)) : [[https://github.com/nasciiboy/raptor-book/][her
   on simplicity and code, the second ([[https://github.com/nasciiboy/RecursiveRegexpRaptor-4][regexp4]]) still in beta seeks achieve the
   maximum speed possible implementing a "table of instructions." In both cases
   the algorithm is from scratch, and only use C. The first vercion (regexp3)
-  occupies a total of *510 lines* of code, the second (regexp4) *686 lines*.
+  occupies a total of *505 lines* of code, the second (regexp4) *686 lines*.
   enjoy!
 
 

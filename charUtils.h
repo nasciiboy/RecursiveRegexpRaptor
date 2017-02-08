@@ -24,12 +24,6 @@ static void strnCpy( char *dest, const char *src, int n ){
   *dest = '\0';
 }
 
-static const char * strChr( const char *str, const int chr ){
-  while( *str && *str != chr ) str++;
-
-  return *str ? str : 0;
-}
-
 static const char * strnChr( const char *str, const int chr, const int n ){
   for( int i = 0; i < n && str[ i ]; i++ )
     if( str[ i ] == chr ) return str + i;

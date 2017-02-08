@@ -292,6 +292,19 @@ int raptorTest(){
   NTEST( "aaabaaa", "#~(a+)", 6 );
   NTEST( "aaabaaa", "#~(a*)", 7 );
 
+  NTEST( "Raptor Raptor Raptor", "Raptor", 3 );
+  NTEST( "Raptor Raptor Raptor", ":waptor", 3 );
+  NTEST( "Raptor Raptor Raptor", ":wa:w:wor", 3 );
+  NTEST( "Raptor Raptor Raptor", ":w+", 3 );
+  NTEST( "Raptor Raptor Raptor", ":w*", 5 );
+  NTEST( "Raptor Raptor Raptor", ":w{6}", 3 );
+  NTEST( "Raptor Raptor Raptor", ":w{6}:s?", 3 );
+
+  NTEST( "Raptor Raaptor Raaaptor", "Ra+ptor", 3 );
+  NTEST( "Raptor Raaptor Raaaptor", "Ra*ptor", 3 );
+  NTEST( "Raptor Raaptor Raaaptor", "R:aptor", 1 );
+  NTEST( "Raptor Raaptor Raaaptor", "R[aeiou]+ptor", 3 );
+
   NTEST( "Raptor Test",     "<((C|R)ap C|C|R)(a+p{1}tor) ?((<T|F>+e)(st))>", 1 );
   NTEST( "Raaaaptor TFest", "<((C|R)ap C|C|R)(a+p{1}tor) ?((<T|F>+e)(st))>", 1 );
   NTEST( "CaptorTest",      "<((C|R)ap C|C|R)(a+p{1}tor) ?((<T|F>+e)(st))>", 1 );
@@ -1059,6 +1072,89 @@ int raptorTest(){
   CATCH_TEST( "aaabaaa", "#~<a+>", 4, "aaa" );
   CATCH_TEST( "aaabaaa", "#~<a*>", 5, "aaa" );
 
+  CATCH_TEST( "aaaaaaa", "<a+>", 1, "aaaaaaa" );
+  CATCH_TEST( "aaaaaaa", "<:a+>", 1, "aaaaaaa" );
+  CATCH_TEST( "aaaaaaa", "<:a*>", 1, "aaaaaaa" );
+  CATCH_TEST( "aaaaaaa", "<:a{7}>", 1, "aaaaaaa" );
+  CATCH_TEST( "aaaaaaa", "<:a{1,}>", 1, "aaaaaaa" );
+  CATCH_TEST( "aaaaaaa", "<:a{1,7}>", 1, "aaaaaaa" );
+
+  CATCH_TEST( "aaaaaaa", "<a>+", 1, "aaaaaaa" );
+  CATCH_TEST( "aaaaaaa", "<:a>+", 1, "aaaaaaa" );
+  CATCH_TEST( "aaaaaaa", "<:a>*", 1, "aaaaaaa" );
+  CATCH_TEST( "aaaaaaa", "<:a>{7}", 1, "aaaaaaa" );
+  CATCH_TEST( "aaaaaaa", "<:a>{1,}", 1, "aaaaaaa" );
+  CATCH_TEST( "aaaaaaa", "<:a>{1,7}", 1, "aaaaaaa" );
+
+  CATCH_TEST( "caaaaaaa", "<a+>", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<a*>", 1, "" );
+  CATCH_TEST( "caaaaaaa", "<a{7}>", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<a{1,}>", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<a{1,7}>", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<a>+", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<a>*", 1, "" );
+  CATCH_TEST( "caaaaaaa", "<a>{7}", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<a>{1,}", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<a>{1,7}", 1, "aaaaaaa" );
+
+  CATCH_TEST( "caaaaaaa", "<:a+>", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<:a*>", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<:a{7}>", 1, "caaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<:a{1,}>", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<:a{1,7}>", 1, "caaaaaa" );
+
+  CATCH_TEST( "caaaaaaa", "<:a>+", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<:a>*", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<:a>{7}", 1, "caaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<:a>{1,}", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<:a>{1,7}", 1, "caaaaaa" );
+
+  CATCH_TEST( "caaaaaaa", "c<a+>", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<a*>", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<a{7}>", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<a{1,}>", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<a{1,7}>", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<a>+", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<a>*", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<a>{7}", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<a>{1,}", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<a>{1,7}", 1, "aaaaaaa" );
+
+  CATCH_TEST( "caaaaaaa", "c<:a+>", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<:a*>", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<:a{7}>", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<:a{1,}>", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<:a{1,7}>", 1, "aaaaaaa" );
+
+  CATCH_TEST( "caaaaaaa", "c<:a>+", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<:a>*", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<:a>{7}", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<:a>{1,}", 1, "aaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "c<:a>{1,7}", 1, "aaaaaaa" );
+
+  CATCH_TEST( "caaaaaaa", "<ca+>", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<ca*>", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<ca{7}>", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<ca{1,}>", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<ca{1,7}>", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<ca>+", 1, "ca" );
+  CATCH_TEST( "caaaaaaa", "<ca>*", 1, "ca" );
+  CATCH_TEST( "caaaaaaa", "<ca>{7}", 1, "" );
+  CATCH_TEST( "caaaaaaa", "<ca>{1,}", 1, "ca" );
+  CATCH_TEST( "caaaaaaa", "<ca>{1,7}", 1, "ca" );
+
+  CATCH_TEST( "caaaaaaa", "<c:a+>", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<c:a*>", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<c:a{7}>", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<c:a{1,}>", 1, "caaaaaaa" );
+  CATCH_TEST( "caaaaaaa", "<c:a{1,7}>", 1, "caaaaaaa" );
+
+  CATCH_TEST( "caaaaaaa", "<c:a>+", 1, "ca" );
+  CATCH_TEST( "caaaaaaa", "<c:a>*", 1, "ca" );
+  CATCH_TEST( "caaaaaaa", "<c:a>{7}", 1, "" );
+  CATCH_TEST( "caaaaaaa", "<c:a>{1,}", 1, "ca" );
+  CATCH_TEST( "caaaaaaa", "<c:a>{1,7}", 1, "ca" );
+
   CATCH_TEST( "Raptor Test",     "<((C|R)ap C|C|R)(a+p{1}tor) ?((<T|F>+e)(st))>", 1, "Raptor Test" );
   CATCH_TEST( "Raptor Test",     "<((C|R)ap C|C|R)(a+p{1}tor) ?((<T|F>+e)(st))>", 2, "T" );
   CATCH_TEST( "Raaaaptor TFest", "<((C|R)ap C|C|R)(a+p{1}tor) ?((<T|F>+e)(st))>", 1, "Raaaaptor TFest" );
@@ -1119,6 +1215,12 @@ int raptorTest(){
   REPLACE_TEST( "aaa", "<a+>"  , 1, "", "" );
   REPLACE_TEST( "aaa", "<a*>"  , 1, "", "" );
   REPLACE_TEST( "aaa", "<a{1}>", 1, "", "" );
+
+  REPLACE_TEST( "aaa", "#~<a>+", 1, "ke", "kekeke" );
+  REPLACE_TEST( "aaa", "#~<:a>+", 1, "12345", "123451234512345" );
+  REPLACE_TEST( "Emacs Rocks", "#~<.+>"   , 1, "1", "11111111111" );
+  REPLACE_TEST( "Aya Test", "#~<Test>+"   , 1, "II", "Aya II" );
+  NTEST( "Raptor Test Raptor", "Ra+pto+r", 2 );
 
   REPLACE_TEST( "aaa", "<a>"   , 1, "e", "eee" );
   REPLACE_TEST( "aaa", "<a>?"  , 1, "e", "eee" );

@@ -61,7 +61,7 @@ raptor-book (borrador) : [[https://github.com/nasciiboy/raptor-book/][aqui]]
   centra en la simplicidad y el codigo, el segundo aun en fase beta ([[https://github.com/nasciiboy/RecursiveRegexpRaptor-4][regexp4]])
   intenta alcanzar la maxima velocidad posible implemetando una "tabla de
   instrucciones". En ambos casos el algoritmo parte de cero, y solo se hace uso
-  de C tal cual la primer vercion ocupa un total de *510 lineas de codigo* y la
+  de C tal cual la primer vercion ocupa un total de *505 lineas de codigo* y la
   segunda *686 lineas*. enjoy!
 
 ** Motivacion
