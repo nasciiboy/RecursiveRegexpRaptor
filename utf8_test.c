@@ -151,14 +151,13 @@ int raptorTest(){
 
   NTEST( "△▲3△567△9", ".", 9 );
   NTEST( "△▲3△567△9", "(.)", 9 );
-  NTEST( "△▲3△567△9", "[.]", 9 );
+  NTEST( "△▲3△567△9", "[.]", 0 );
   NTEST( "△▲3△567△9", "(.+)", 1 );
   NTEST( "△▲3△567△9", ":&", 4 );
   NTEST( "△▲3△567△9", ":w", 5 );
   NTEST( "△▲3△567△9", ":W", 4 );
   NTEST( "△▲3△567△9", ":d", 5 );
   NTEST( "△▲3△567△9", ":a", 0 );
-  NTEST( "△▲3△567△9", "3-9", 5 );
   NTEST( "△▲3△567△9", "[3-9]", 5 );
   NTEST( "△▲3△567△9", "[^3-9]", 4 );
   NTEST( "△▲3△567△9", "[^a-z]", 9 );
@@ -180,7 +179,9 @@ int raptorTest(){
   NTEST( "R▲△ptor Test", "R[△▲]{2}ptor", 1 );
   NTEST( "R▲△ptor Test", "R[^ae]{2}ptor", 1 );
   NTEST( "R▲△ptor Test", "R.{2}ptor", 1 );
-  NTEST( "R▲△ptor Test", "R[.]{2}ptor", 1 );
+  NTEST( "R▲△ptor Test", "R[:W]{2}ptor", 1 );
+  NTEST( "R▲△ptor Test", "R[^:w]{2}ptor", 1 );
+
 
   char str[1024];
 #define CATCH_TEST( text, re, n, rtext )                \
