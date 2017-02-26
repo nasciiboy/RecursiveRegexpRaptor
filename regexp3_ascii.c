@@ -44,14 +44,13 @@ static int  loopGroup    ( struct RE *rexp );
 static int  tracker      ( struct RE *rexp, struct RE *track );
 static int  trackerSet   ( struct RE *rexp, struct RE *track );
 
-static int  cutPath      ( struct RE *rexp, struct RE *track );
 static void cutSimple    ( struct RE *rexp, struct RE *track );
-static void cutPair      ( struct RE *rexp, struct RE *track, const int type );
+static int  cutByType    ( struct RE *rexp, struct RE *track, const int type );
 static void cutByLen     ( struct RE *rexp, struct RE *track, const int len, const int type );
 static void cutRexp      ( struct RE *rexp, const int len );
 
 static int  walkMeta     ( const char *str, const int len );
-static int  walkPair     ( const char *str, const int len, const char p[2] );
+static int  walkSet      ( const char *str, const int len );
 
 static void getMods      ( struct RE *rexp, struct RE *track );
 static void getLoops     ( struct RE *rexp, struct RE *track );
@@ -108,7 +107,7 @@ int regexp3( const char *txt, const char *re ){
 static int walker( struct RE rexp ){
   struct RE track;
   for( const int oTpos = text.pos, oCindex = Catch.index, oCidx = Catch.idx;
-       cutPath( &rexp, &track );
+       cutByType( &rexp, &track, PATH );
        text.pos = oTpos, Catch.index = oCindex, Catch.idx = oCidx )
     if( trekking( &track ) ) return TRUE;
 
@@ -186,9 +185,9 @@ static int tracker( struct RE *rexp, struct RE *track ){
   case '@': cutByLen ( rexp, track, 1 +
                       countCharDigits( rexp->ptr + 1 ),
                                      BACKREF ); break;
-  case '(': cutPair  ( rexp, track,  GROUP   ); break;
-  case '<': cutPair  ( rexp, track,  HOOK    ); break;
-  case '[': cutPair  ( rexp, track,  SET     ); break;
+  case '(': cutByType( rexp, track,  GROUP   ); break;
+  case '<': cutByType( rexp, track,  HOOK    ); break;
+  case '[': cutByType( rexp, track,  SET     ); break;
   default : cutSimple( rexp, track           ); break;
   }
 
@@ -218,51 +217,44 @@ static void cutByLen( struct RE *rexp, struct RE *track, const int len, const in
   cutRexp( rexp, len );
 }
 
-static int cutPath( struct RE *rexp, struct RE *track ){
+static int cutByType( struct RE *rexp, struct RE *track, const int type ){
   if( rexp->len == 0 ) return FALSE;
 
-  *track      = *rexp;
-  track->type = PATH;
+  *track = *rexp;
+  track->type = type;
+  for( int cut, i = 0, deep = 0; (i += walkMeta( rexp->ptr + i, rexp->len - i )) < rexp->len; i++ ){
+    switch( rexp->ptr[ i ] ){
+    case '(': case '<': deep++; break;
+    case ')': case '>': deep--; break;
+    case '[': i += walkSet( rexp->ptr + i, rexp->len - i ); break;
+    }
 
-  for( int i = 0; (i += walkMeta( rexp->ptr + i, rexp->len - i )) < rexp->len; i++ )
-    switch( rexp->ptr[i] ){
-    case '<': i += walkPair( rexp->ptr + i, rexp->len - i, "<>" ); break;
-    case '(': i += walkPair( rexp->ptr + i, rexp->len - i, "()" ); break;
-    case '[': i += walkPair( rexp->ptr + i, rexp->len - i, "[]" ); break;
-    case '|':
-      track->len = i;
+    switch( type ){
+    case HOOK    : cut = deep == 0; break;
+    case GROUP   : cut = deep == 0; break;
+    case SET     : cut = rexp->ptr[i] == ']'; break;
+    case PATH    : cut = deep == 0 && rexp->ptr[i] == '|'; break;
+    }
+
+    if( cut ){
+      track->len  = i;
       cutRexp( rexp, i + 1 );
+      if( type != PATH ) cutRexp( track, 1 );
       return TRUE;
     }
+  }
 
   cutRexp( rexp, rexp->len );
   return TRUE;
-}
-
-static void cutPair( struct RE *rexp, struct RE *track, const int type ){
-  *track       = *rexp;
-  track->type  = type;
-
-  switch( type ){
-  case HOOK : track->len = walkPair( rexp->ptr, rexp->len, "<>" ); break;
-  case GROUP: track->len = walkPair( rexp->ptr, rexp->len, "()" ); break;
-  case SET  : track->len = walkPair( rexp->ptr, rexp->len, "[]" ); break;
-  }
-
-  cutRexp( track, 1 );
-  cutRexp( rexp, track->len + 2 );
 }
 
 static void cutRexp( struct RE *rexp, const int len ){
   rexp->ptr += len; rexp->len -= len;
 }
 
-static int walkPair( const char *rexp, const int len, const char p[2] ){
-  for( int i = 0, deep = 0; (i += walkMeta( rexp + i, len + i )) < len; i++ ){
-    if( rexp[i] == p[0] ) deep++;
-    if( rexp[i] == p[1] ) deep--;
-    if( deep == 0 ) return i;
-  }
+static int walkSet( const char *str, const int len ){
+  for( int i = 0; (i += walkMeta( str + i, len - i )) < len; i++ )
+    if( str[i] == ']' ) return i;
 
   return len;
 }

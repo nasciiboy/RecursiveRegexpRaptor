@@ -607,6 +607,12 @@ int raptorTest(){
   NTEST( "abababababababababababababababababababab", "([ab]{5}:a{5})" , 4 );
   NTEST( "()<>[]{}*?+", "[:(:):<:>:[:]:{:}:*:?:+]", 11 );
   NTEST( "()<>[]|{}*#@?+", "[()<>:[:]|{}*?+#@]", 14 );
+  NTEST( "12)", "#^:b*(-|:+|(:d+|:a+)[.)])", 1 );
+  NTEST( "12.", "#^:b*(-|:+|(:d+|:a+)[.)])", 1 );
+  NTEST( "a)" , "#^:b*(-|:+|(:d+|:a+)[.)])", 1 );
+  NTEST( "a." , "#^:b*(-|:+|(:d+|:a+)[.)])", 1 );
+  NTEST( "-"  , "#^:b*(-|:+|(:d+|:a+)[.)])", 1 );
+  NTEST( "+"  , "#^:b*(-|:+|(:d+|:a+)[.)])", 1 );
 
   NTEST( ")>}", "[)>}]", 3 );
 
@@ -1066,6 +1072,7 @@ int raptorTest(){
   CATCH_TEST( "Rap Captor Fest", "<((C|R)ap C|C|R)(a+p{1}tor) ?((<T|F>+e)(st))>", 1, "Rap Captor Fest" );
   CATCH_TEST( "Rap Captor Fest", "#~<((C|R)ap C|C|R)(a+p{1}tor) ?((<T|F>+e)(st))>", 3, "Captor Fest" );
 
+
 #define REPLACE_TEST( text, re, n, rtext, ctext )               \
   result = regexp3( text, re );                                 \
   total++;                                                      \
@@ -1198,6 +1205,7 @@ int raptorTest(){
   REPLACE_TEST( "Raptor Raptors Raptoring", "<<<R>a>ptor>:w*", 3, "C", "Captor Captors Captoring" );
   REPLACE_TEST( "Raptor Raptors Raptoring", "<<<R>a>ptor>:w*", 2, "4", "4ptor 4ptors 4ptoring" );
 
+
 #define PUT_TEST( text, re, rtext, ctext )              \
   result = regexp3( text, re );                         \
   total++;                                              \
@@ -1228,6 +1236,8 @@ int raptorTest(){
   PUT_TEST( "Raptor Test", "<aptor|est>", "C##43 ##1##2", "C#43 #1#2" );
   PUT_TEST( "Raptor Test", "<aptor|est>", "##Raptor ##Test", "#Raptor #Test" );
   PUT_TEST( "Raptor Test Fest", "<Raptor> <Test>", "#1_#2", "Raptor_Test" );
+  PUT_TEST( "..figure > test figure", "#^<:s*:.:.>:s*<[:w:-:_]+><[^:>]*>:>:s*<.*>", "[#1][#2][#3][#4]", "[..][figure][ ][test figure]" )
+
 
   PUT_TEST( "123456789", "#$<<:d><:d>>", "[#2] [#3] [#1]", "[8] [9] [89]" );
 
