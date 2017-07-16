@@ -39,6 +39,88 @@ struct RE {
 
 static const unsigned char xooooooo = 0x80; // instead `isUTF8( c )` use `c & xooooooo`
 
+#define	t1 0x00   // 0000 0000
+#define	tx 0x80   // 1000 0000
+#define	t2 0xC0   // 1100 0000
+#define	t3 0xE0   // 1110 0000
+#define	t4 0xF0   // 1111 0000
+#define	t5 0xF8   // 1111 1000
+
+#define	locb 0x80 // 1000 0000
+#define	hicb 0xBF // 1011 1111
+
+#define	xx 0xF1   // invalid: size 1
+#define	as 0xF0   // ASCII: size 1
+#define	s1 0x02   // accept 0, size 2
+#define	s2 0x13   // accept 1, size 3
+#define	s3 0x03   // accept 0, size 3
+#define	s4 0x23   // accept 2, size 3
+#define	s5 0x34   // accept 3, size 4
+#define	s6 0x04   // accept 0, size 4
+#define	s7 0x44   // accept 4, size 4
+
+static const unsigned char first[256] = {
+  as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x00-0x0F
+  as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x10-0x1F
+  as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x20-0x2F
+  as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x30-0x3F
+  as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x40-0x4F
+  as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x50-0x5F
+  as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x60-0x6F
+  as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x70-0x7F
+  xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, // 0x80-0x8F
+  xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, // 0x90-0x9F
+  xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, // 0xA0-0xAF
+  xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, // 0xB0-0xBF
+  xx, xx, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, // 0xC0-0xCF
+  s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, s1, // 0xD0-0xDF
+  s2, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s3, s4, s3, s3, // 0xE0-0xEF
+  s5, s6, s6, s6, s7, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx, xx  // 0xF0-0xFF
+};
+
+struct acceptRange {
+  unsigned char lo; // lowest value for second byte.
+  unsigned char hi; // highest value for second byte.
+} acceptRanges[5] = {
+  { locb, hicb },
+  { 0xA0, hicb },
+  { locb, 0x9F },
+  { 0x90, hicb },
+  { locb, 0x8F },
+};
+
+static int utf8meter( const char *s ){
+  int n = 0;
+  for( const char *a = s; *a && n < 5; n++, a++ );
+
+  if( n < 1 ){ return 0; }
+
+  unsigned const char S0 = s[0];
+  unsigned const char x  = first[S0];
+
+  if( x >= as ){ return 1; }
+
+  unsigned const char sz = x & 7;
+  if( n < sz ){ return 1; }
+
+  unsigned const char S1 = s[1];
+  const struct acceptRange accept = acceptRanges[x>>4];
+
+  if( S1 < accept.lo || accept.hi < S1 ){ return 1; }
+
+  if( sz == 2 ){ return 2; }
+
+  unsigned const char S2 = s[2];
+  if( S2 < locb || hicb < S2 ){ return 1; }
+
+  if( sz == 3 ){ return 3; }
+
+  unsigned const char S3 = s[3];
+  if( S3 < locb || hicb < S3 ){ return 1; }
+
+  return 4;
+}
+
 static int  walker       ( struct RE  rexp );
 static int  trekking     ( struct RE *rexp );
 static int  looper       ( struct RE *rexp );
@@ -56,8 +138,6 @@ static int  walkSet      ( const char *str, const int len );
 
 static void getMods      ( struct RE *rexp, struct RE *track );
 static void getLoops     ( struct RE *rexp, struct RE *track );
-
-static int  utf8meter    ( const char *str );
 
 static int  match        ( struct RE *rexp );
 static int  matchSet     ( struct RE  rexp );
@@ -314,20 +394,6 @@ static void getLoops( struct RE *rexp, struct RE *track ){
 
       cutRexp( rexp, 1 );
     }
-}
-
-static int utf8meter( const char *str ){
-  static unsigned char xxoooooo = 0xC0;
-  unsigned char i, utfOrNo = *str;
-
-  if( utfOrNo & xooooooo ){
-    for ( i = 1, utfOrNo <<= 1; utfOrNo & xooooooo; i++, utfOrNo <<= 1 )
-      if( (str[ i ] & xxoooooo) != xooooooo ) return 1;
-
-    if( i >= 2 && i <= 8 ) return i;
-  }
-
-  return *str ? 1 : 0;
 }
 
 static int match( struct RE *rexp ){
