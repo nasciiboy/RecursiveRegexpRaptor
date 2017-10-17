@@ -213,8 +213,7 @@ static int trekking( struct RE *rexp ){
     case SET:
       if( track.ptr[0] == '^' ){
         cutRexp( &track, 1 );
-        if( track.mods & MOD_NEGATIVE ) track.mods &= ~MOD_NEGATIVE;
-        else                            track.mods |=  MOD_NEGATIVE;
+        track.mods |=  MOD_NEGATIVE;
       }
     case BACKREF: case META: case RANGEAB: case UTF8: case POINT: case SIMPLE:
       result = looper( &track );
@@ -228,34 +227,17 @@ static int trekking( struct RE *rexp ){
 
 static int looper( struct RE *rexp ){
   int forward, loops = 0;
-
-  if( rexp->mods & MOD_NEGATIVE )
-    while( loops < rexp->loopsMax && text.pos < text.len && !match( rexp ) ){
-      text.pos += utf8meter( text.ptr + text.pos );
-      loops++;
-    }
-  else
-    while( loops < rexp->loopsMax && text.pos < text.len && (forward = match( rexp )) ){
-      text.pos += forward;
-      loops++;
-    }
+  while( loops < rexp->loopsMax && text.pos < text.len && (forward = match( rexp )) ){
+    text.pos += forward;
+    loops++;
+  }
 
   return loops < rexp->loopsMin ? FALSE : TRUE;
 }
 
 static int loopGroup( struct RE *rexp ){
-  int loops = 0, textPos = text.pos;
-
-  if( rexp->mods & MOD_NEGATIVE ){
-    while( loops < rexp->loopsMax && !walker( *rexp ) ){
-      textPos++;
-      text.pos = textPos;
-      loops++;
-    }
-    text.pos = textPos;
-  } else
-    while( loops < rexp->loopsMax && walker( *rexp ) )
-      loops++;
+  int loops = 0;
+  while( loops < rexp->loopsMax && walker( *rexp ) ) loops++;
 
   return loops < rexp->loopsMin ? FALSE : TRUE;
 }
@@ -354,8 +336,6 @@ static int walkMeta( const char *str, const int len ){
 
 static void getMods( struct RE *rexp, struct RE *track ){
   int inMods = *rexp->ptr == '#', pos = 0;
-  track->mods &= ~MOD_NEGATIVE;
-
   while( inMods )
     switch( rexp->ptr[ ++pos ] ){
     case '^': track->mods |=  MOD_ALPHA     ; break;
@@ -364,7 +344,6 @@ static void getMods( struct RE *rexp, struct RE *track ){
     case '~': track->mods |=  MOD_FwrByChar ; break;
     case '*': track->mods |=  MOD_COMMUNISM ; break;
     case '/': track->mods &= ~MOD_COMMUNISM ; break;
-    case '!': track->mods |=  MOD_NEGATIVE  ; break;
     default : inMods       =  FALSE         ; break;
     }
 
@@ -448,10 +427,10 @@ static int matchSet( struct RE rexp ){
       else result = strnChr      ( track.ptr, text.ptr[ text.pos ], track.len  ) != 0;
     }
 
-    if( result ) return result;
+    if( result ) return rexp.mods & MOD_NEGATIVE ? FALSE : result;
   }
 
-  return FALSE;
+  return rexp.mods & MOD_NEGATIVE ? utf8meter( text.ptr + text.pos ) : FALSE;
 }
 
 static int trackerSet( struct RE *rexp, struct RE *track ){
@@ -476,7 +455,6 @@ static int trackerSet( struct RE *rexp, struct RE *track ){
 
  setLM:
   track->loopsMin = track->loopsMax = 1;
-  track->mods    &= ~MOD_NEGATIVE;
   return TRUE;
 }
 
